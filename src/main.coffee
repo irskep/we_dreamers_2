@@ -82,6 +82,7 @@ class WD.GameController
     @roomsLoadedBus = new Bacon.Bus()
     @roomsAreLoaded = @roomsLoadedBus.toProperty(false)
     @players = {}
+    @$worldContainer.hide()
     WD.ensureUser (username) =>
       $loadingEl = $("<div class='status-message'>Loading...</div>").appendTo(@$el)
       @username = username
@@ -139,6 +140,9 @@ class WD.GameController
         V2(data.room2.x, data.room2.y), data.type)
       stillLoadingRooms = true
       anyRoomsLoaded = true
+
+    @player.fb.child('position').once 'value', (snapshot) =>
+      setTimeout (=> @$worldContainer.show()), 400
 
   interactify: (player) ->
     fbOnline = fb.child('online_users').child(player.username)

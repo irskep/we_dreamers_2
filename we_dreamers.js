@@ -2530,6 +2530,7 @@
       this.roomsLoadedBus = new Bacon.Bus();
       this.roomsAreLoaded = this.roomsLoadedBus.toProperty(false);
       this.players = {};
+      this.$worldContainer.hide();
       return WD.ensureUser(function(username) {
         var $loadingEl;
 
@@ -2595,13 +2596,18 @@
         stillLoadingRooms = true;
         return anyRoomsLoaded = true;
       });
-      return fb.child('chunks/(0, 0)/doors').on('child_added', function(snapshot) {
+      fb.child('chunks/(0, 0)/doors').on('child_added', function(snapshot) {
         var data;
 
         data = snapshot.val();
         _this.addDoor(new WD.Door(V2(data.room1.x, data.room1.y), V2(data.room2.x, data.room2.y), data.type));
         stillLoadingRooms = true;
         return anyRoomsLoaded = true;
+      });
+      return this.player.fb.child('position').once('value', function(snapshot) {
+        return setTimeout((function() {
+          return _this.$worldContainer.show();
+        }), 400);
       });
     };
 
