@@ -78,7 +78,7 @@ class WD.Player
     stopMoving()
     started = true
 
-    Bacon.combineTemplate(@properties).log()
+    Bacon.combineTemplate(@properties)
 
     @stopMoving = stopMoving
     @updateStreams = updateStreams

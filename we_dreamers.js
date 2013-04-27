@@ -2730,7 +2730,7 @@
       };
       stopMoving();
       started = true;
-      Bacon.combineTemplate(this.properties).log();
+      Bacon.combineTemplate(this.properties);
       this.stopMoving = stopMoving;
       this.updateStreams = updateStreams;
       isStillBus = new Bacon.Bus();
