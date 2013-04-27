@@ -17,7 +17,8 @@ WD.subtractiveColor = (r, g, b, fraction = 1) ->
     g *= fraction
     b *= fraction
     floor = 255 - Math.max(r, g, b)
-    "rgb(#{floor + r}, #{floor + g}, #{floor + b})"
+    c = (i) -> Math.floor(floor + i)
+    "rgb(#{c(r)}, #{c(g)}, #{c(b)})"
 
 WD.mutateColor = (c) ->
   # max: 100
@@ -60,5 +61,9 @@ WD.keyboard =
 
 
 WD.time = do ->
-  t = 1000000
-  -> t
+  diff = 0
+
+  $.getJSON 'http://json-time.appspot.com/time.json?callback=?', {}, ({datetime}) ->
+    diff = (new Date(datetime)).getTime() - (new Date()).getTime()
+
+  -> (new Date()).getTime() + diff

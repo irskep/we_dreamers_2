@@ -39,6 +39,10 @@ class WD.Player
 
   constructor: (@clock, @username, @gameController) ->
     @gridPosition = V2(0, 0)
+    @stats =
+      r: 0
+      g: 0
+      b: 0
     @currentRoom = null
 
     @$el = $("<div class='wd-player' data-username='#{@username}'></div>")
@@ -111,6 +115,10 @@ class WD.Player
           @walkToRoom(room)
         else
           @teleportToRoom(room)
+
+    _.each _.keys(@stats), (k) =>
+      @fb.child('stats').child(k).on 'value', (snapshot) =>
+        @stats[k] = snapshot.val() or 0
 
     @fb.child('bonk').on 'value', (snapshot) =>
       data = snapshot.val()

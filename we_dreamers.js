@@ -2645,6 +2645,9 @@
       keyboardToDirection('d', V2(1, 0));
       keyboardToDirection('w', V2(0, -1));
       keyboardToDirection('s', V2(0, 1));
+      WD.keyboard.downs('space').filter(player.isStill).onValue(function() {
+        return _this.harvest(player.currentRoom);
+      });
       return _.each(player.positionProperties, function(property, k) {
         return property.onValue(function(v) {
           return _this.moveWorldContainer(k, -v);
@@ -2713,6 +2716,17 @@
           type: 'basic'
         });
       }
+    };
+
+    GameController.prototype.harvest = function(room) {
+      var strength,
+        _this = this;
+
+      strength = WD.growiness(room.lastHarvested);
+      room.fb.child('lastHarvested').set(WD.time());
+      return _.each(['r', 'g', 'b'], function(k) {
+        return _this.player.fb.child('stats').child(k).set(_this.player.stats[k] + room.color[k] * strength);
+      });
     };
 
     return GameController;
@@ -2785,6 +2799,11 @@
       this.username = username;
       this.gameController = gameController;
       this.gridPosition = V2(0, 0);
+      this.stats = {
+        r: 0,
+        g: 0,
+        b: 0
+      };
       this.currentRoom = null;
       this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
       this.initBaconJunk();
@@ -2870,6 +2889,11 @@
             return _this.teleportToRoom(room);
           }
         }
+      });
+      _.each(_.keys(this.stats), function(k) {
+        return _this.fb.child('stats').child(k).on('value', function(snapshot) {
+          return _this.stats[k] = snapshot.val() || 0;
+        });
       });
       return this.fb.child('bonk').on('value', function(snapshot) {
         var data;
@@ -3059,7 +3083,7 @@
   };
 
   WD.subtractiveColor = function(r, g, b, fraction) {
-    var floor;
+    var c, floor;
 
     if (fraction == null) {
       fraction = 1;
@@ -3068,7 +3092,10 @@
     g *= fraction;
     b *= fraction;
     floor = 255 - Math.max(r, g, b);
-    return "rgb(" + (floor + r) + ", " + (floor + g) + ", " + (floor + b) + ")";
+    c = function(i) {
+      return Math.floor(floor + i);
+    };
+    return "rgb(" + (c(r)) + ", " + (c(g)) + ", " + (c(b)) + ")";
   };
 
   WD.mutateColor = function(c) {
@@ -3123,24 +3150,30 @@
   };
 
   WD.time = (function() {
-    var t;
+    var diff;
 
-    t = 1000000;
+    diff = 0;
+    $.getJSON('http://json-time.appspot.com/time.json?callback=?', {}, function(_arg) {
+      var datetime;
+
+      datetime = _arg.datetime;
+      return diff = (new Date(datetime)).getTime() - (new Date()).getTime();
+    });
     return function() {
-      return t;
+      return (new Date()).getTime() + diff;
     };
   })();
 
 }).call(this);
 
 (function() {
-  var GROW_TIME, growiness;
+  var GROW_TIME;
 
   window.WD = window.WD || {};
 
-  GROW_TIME = 1000 * 60 * 5;
+  GROW_TIME = 1000 * 5;
 
-  growiness = function(t) {
+  WD.growiness = function(t) {
     if (t == null) {
       t = 0;
     }
@@ -3168,17 +3201,26 @@
         }
       });
       this.fb.child('color').on('value', function(snapshot) {
-        return _this.updateColor(snapshot.val());
+        _this.color = snapshot.val();
+        return _this.updateColor();
       });
       this.fb.child('lastHarvested').on('value', function(snapshot) {
-        _this.lastHarvested = snapshot.val();
-        return _this.updateColor(_this.color);
+        var checkGrowinessAgain;
+
+        _this.lastHarvested = snapshot.val() || 0;
+        _this.updateColor(_this.color);
+        checkGrowinessAgain = function() {
+          _this.updateColor();
+          if (WD.growiness(_this.lastHarvested) < 1) {
+            return setTimeout(checkGrowinessAgain, 500);
+          }
+        };
+        return checkGrowinessAgain();
       });
     }
 
-    Room.prototype.updateColor = function(color) {
-      this.color = color;
-      this.cssColor = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, growiness(this.lastHarvested));
+    Room.prototype.updateColor = function() {
+      this.cssColor = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, WD.growiness(this.lastHarvested));
       return this.$el.css('background-color', this.cssColor);
     };
 
@@ -3228,20 +3270,36 @@
       this.fbRoom1 = fb.child('chunks/(0, 0)/rooms').child(this.gridPoint1.toString());
       this.fbRoom2 = fb.child('chunks/(0, 0)/rooms').child(this.gridPoint2.toString());
       this.fbRoom1.on('value', function(snapshot) {
-        var data;
+        var checkGrowinessAgain, data;
 
         data = snapshot.val();
         _this.color1 = data.color;
-        _this.color1.strength = growiness(data.lastHarvested);
-        return _this.updateColors();
+        _this.color1.strength = WD.growiness(data.lastHarvested);
+        _this.updateColors();
+        checkGrowinessAgain = function() {
+          _this.updateColors();
+          _this.color1.strength = WD.growiness(data.lastHarvested);
+          if (WD.growiness(data.lastHarvested) < 1) {
+            return setTimeout(checkGrowinessAgain, 500);
+          }
+        };
+        return checkGrowinessAgain();
       });
       this.fbRoom2.on('value', function(snapshot) {
-        var data;
+        var checkGrowinessAgain, data;
 
         data = snapshot.val();
         _this.color2 = data.color;
-        _this.color2.strength = growiness(data.lastHarvested);
-        return _this.updateColors();
+        _this.color2.strength = WD.growiness(data.lastHarvested);
+        _this.updateColors();
+        checkGrowinessAgain = function() {
+          _this.updateColors();
+          _this.color2.strength = WD.growiness(data.lastHarvested);
+          if (WD.growiness(data.lastHarvested) < 1) {
+            return setTimeout(checkGrowinessAgain, 500);
+          }
+        };
+        return checkGrowinessAgain();
       });
     }
 

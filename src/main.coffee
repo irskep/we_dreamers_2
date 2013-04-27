@@ -119,14 +119,16 @@ class WD.GameController
     loadRoom = (snapshot) =>
       data = snapshot.val()
       @addRoom new WD.Room(
-        V2(data.position.x, data.position.y), data.color, data.lastHarvested, this)
+        V2(data.position.x, data.position.y),
+        data.color, data.lastHarvested, this)
       stillLoadingRooms = true
       anyRoomsLoaded = true
 
     fb.child('chunks/(0, 0)/rooms').on 'child_added', (snapshot) =>
       data = snapshot.val()
       @addRoom new WD.Room(
-        V2(data.position.x, data.position.y), data.color, data.lastHarvested, this)
+        V2(data.position.x, data.position.y),
+        data.color, data.lastHarvested, this)
       stillLoadingRooms = true
       anyRoomsLoaded = true
 
@@ -167,6 +169,9 @@ class WD.GameController
     keyboardToDirection('d', V2(1, 0))
     keyboardToDirection('w', V2(0, -1))
     keyboardToDirection('s', V2(0, 1))
+
+    WD.keyboard.downs('space').filter(player.isStill).onValue =>
+      @harvest(player.currentRoom)
 
     _.each player.positionProperties, (property, k) =>
       property.onValue (v) =>
@@ -215,3 +220,10 @@ class WD.GameController
         room1: newPoint
         room2: room.gridPoint
         type: 'basic'
+
+  harvest: (room) ->
+    strength = WD.growiness(room.lastHarvested)
+    room.fb.child('lastHarvested').set(WD.time())
+    _.each ['r', 'g', 'b'], (k) =>
+      @player.fb.child('stats').child(k).set(
+        @player.stats[k] + room.color[k] * strength)

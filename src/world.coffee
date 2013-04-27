@@ -1,7 +1,7 @@
 window.WD = window.WD or {}
 
-GROW_TIME = 1000 * 60 * 5
-growiness = (t = 0) -> Math.min((WD.time() - t) / GROW_TIME, 1)
+GROW_TIME = 1000 * 5
+WD.growiness = (t = 0) -> Math.min((WD.time() - t) / GROW_TIME, 1)
 
 class WD.Room
 
@@ -24,16 +24,22 @@ class WD.Room
         @gameController.excavate(this, Vector2.fromString(snapshot.name()))
 
     @fb.child('color').on 'value', (snapshot) =>
-      @updateColor(snapshot.val())
+      @color = snapshot.val()
+      @updateColor()
 
     @fb.child('lastHarvested').on 'value', (snapshot) =>
-      @lastHarvested = snapshot.val()
+      @lastHarvested = snapshot.val() or 0
       @updateColor(@color)
 
-  updateColor: (color) ->
-    @color = color
+      checkGrowinessAgain = =>
+        @updateColor()
+        if WD.growiness(@lastHarvested) < 1
+          setTimeout checkGrowinessAgain, 500
+      checkGrowinessAgain()
+
+  updateColor: ->
     @cssColor = WD.subtractiveColor(
-      @color.r, @color.g, @color.b, growiness(@lastHarvested))
+      @color.r, @color.g, @color.b, WD.growiness(@lastHarvested))
     @$el.css('background-color', @cssColor)
 
   center: ->
@@ -62,14 +68,28 @@ class WD.Door
     @fbRoom1.on 'value', (snapshot) =>
       data = snapshot.val()
       @color1 = data.color
-      @color1.strength = growiness(data.lastHarvested)
+      @color1.strength = WD.growiness(data.lastHarvested)
       @updateColors()
+
+      checkGrowinessAgain = =>
+        @updateColors()
+        @color1.strength = WD.growiness(data.lastHarvested)
+        if WD.growiness(data.lastHarvested) < 1
+          setTimeout checkGrowinessAgain, 500
+      checkGrowinessAgain()
 
     @fbRoom2.on 'value', (snapshot) =>
       data = snapshot.val()
       @color2 = data.color
-      @color2.strength = growiness(data.lastHarvested)
+      @color2.strength = WD.growiness(data.lastHarvested)
       @updateColors()
+
+      checkGrowinessAgain = =>
+        @updateColors()
+        @color2.strength = WD.growiness(data.lastHarvested)
+        if WD.growiness(data.lastHarvested) < 1
+          setTimeout checkGrowinessAgain, 500
+      checkGrowinessAgain()
 
   hash1: -> @gridPoint1.toString()
   hash2: -> @gridPoint2.toString()
