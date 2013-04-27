@@ -2,7 +2,7 @@ window.WD = window.WD or {}
 
 class WD.Room
 
-  constructor: (@gridPoint, @color, @health) ->
+  constructor: (@gridPoint, @color, @health, @gameController) ->
     @color = WD.subtractiveColor(@color.r, @color.g, @color.b, @health / 100)
     @$el = $("
         <div class='wd-room rounded-rect'
@@ -15,6 +15,10 @@ class WD.Room
       left: @gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING
       top: @gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING
       'background-color': @color
+    @fb = fb.child('chunks/(0, 0)/rooms').child(@hash())
+
+    @fb.child('walls').on 'child_changed', (snapshot) =>
+      console.log snapshot.name(), _.keys(snapshot.val()).length
 
   center: ->
     V2(@gridPoint.x * WD.GRID_SIZE + WD.GRID_SIZE / 2,
@@ -24,9 +28,7 @@ class WD.Room
 
 class WD.Door
 
-  constructor: (args...) ->
-    # wat.
-    [@gridPoint1, @gridPoint2, @type] = args
+  constructor: (@gridPoint1, @gridPoint2, @type) ->
     if @gridPoint2.isLeftOrAbove(@gridPoint1)
       tmp = @gridPoint1
       @gridPoint1 = @gridPoint2

@@ -117,14 +117,14 @@ class WD.GameController
     loadRoom = (snapshot) =>
       data = snapshot.val()
       @addRoom new WD.Room(
-        V2(data.position.x, data.position.y), data.color, data.health)
+        V2(data.position.x, data.position.y), data.color, data.health, this)
       stillLoadingRooms = true
       anyRoomsLoaded = true
 
     fb.child('chunks/(0, 0)/rooms').on 'child_added', (snapshot) =>
       data = snapshot.val()
       @addRoom new WD.Room(
-        V2(data.position.x, data.position.y), data.color, data.health)
+        V2(data.position.x, data.position.y), data.color, data.health, this)
       stillLoadingRooms = true
       anyRoomsLoaded = true
 
@@ -178,3 +178,10 @@ class WD.GameController
       door.other(room.gridPoint).equals(p2)
     )
     return @roomAtPoint(p2)
+
+  weaken: (room, dGridPoint) ->
+    fb.child('chunks/(0, 0)/rooms')
+      .child(room.hash())
+      .child('walls')
+      .child(dGridPoint.toString())
+      .push(@player.username)

@@ -2574,7 +2574,7 @@
         var data;
 
         data = snapshot.val();
-        _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.health));
+        _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.health, _this));
         stillLoadingRooms = true;
         return anyRoomsLoaded = true;
       };
@@ -2582,7 +2582,7 @@
         var data;
 
         data = snapshot.val();
-        _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.health));
+        _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.health, _this));
         stillLoadingRooms = true;
         return anyRoomsLoaded = true;
       });
@@ -2659,6 +2659,10 @@
         return false;
       }
       return this.roomAtPoint(p2);
+    };
+
+    GameController.prototype.weaken = function(room, dGridPoint) {
+      return fb.child('chunks/(0, 0)/rooms').child(room.hash()).child('walls').child(dGridPoint.toString()).push(this.player.username);
     };
 
     return GameController;
@@ -2863,6 +2867,7 @@
       streams1.reachedDest.onValue(function() {
         var streams2;
 
+        _this.gameController.weaken(_this.currentRoom, V2(x, y));
         streams2 = xyStreams(_this.clock, p2, p1, 200, easeOutQuad);
         streams2.reachedDest.onValue(function() {
           _this.stopMoving();
@@ -3048,15 +3053,16 @@
 }).call(this);
 
 (function() {
-  var __slice = [].slice;
-
   window.WD = window.WD || {};
 
   WD.Room = (function() {
-    function Room(gridPoint, color, health) {
+    function Room(gridPoint, color, health, gameController) {
+      var _this = this;
+
       this.gridPoint = gridPoint;
       this.color = color;
       this.health = health;
+      this.gameController = gameController;
       this.color = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.health / 100);
       this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        ></div>      ").trim()).css({
         width: WD.ROOM_SIZE,
@@ -3064,6 +3070,10 @@
         left: this.gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING,
         top: this.gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING,
         'background-color': this.color
+      });
+      this.fb = fb.child('chunks/(0, 0)/rooms').child(this.hash());
+      this.fb.child('walls').on('child_changed', function(snapshot) {
+        return console.log(snapshot.name(), _.keys(snapshot.val()).length);
       });
     }
 
@@ -3080,12 +3090,13 @@
   })();
 
   WD.Door = (function() {
-    function Door() {
-      var args, tmp,
+    function Door(gridPoint1, gridPoint2, type) {
+      var tmp,
         _this = this;
 
-      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      this.gridPoint1 = args[0], this.gridPoint2 = args[1], this.type = args[2];
+      this.gridPoint1 = gridPoint1;
+      this.gridPoint2 = gridPoint2;
+      this.type = type;
       if (this.gridPoint2.isLeftOrAbove(this.gridPoint1)) {
         tmp = this.gridPoint1;
         this.gridPoint1 = this.gridPoint2;
