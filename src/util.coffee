@@ -5,6 +5,7 @@ WD.ROOM_SIZE = 110
 WD.ROOM_PADDING = (WD.GRID_SIZE - WD.ROOM_SIZE) / 2
 WD.DOOR_SIZE = WD.GRID_SIZE - 40
 WD.MAX_BUCKET = 300
+WD.COLOR_CHANNEL_MAX = 70
 
 WD.run = (selector) -> (new WD.GameController($(selector))).run()
 
@@ -25,16 +26,16 @@ WD.mutateColor = (c) ->
   # max: 100
   # min: 30
   newColor =
-    r: c.r + _.random(-20, 20)
-    g: c.g + _.random(-20, 20)
-    b: c.b + _.random(-20, 20)
-  newColor.r = Math.floor(Math.min(Math.max(newColor.r, 0), 50))
-  newColor.g = Math.floor(Math.min(Math.max(newColor.g, 0), 50))
-  newColor.b = Math.floor(Math.min(Math.max(newColor.b, 0), 50))
+    r: c.r + _.random(-30, 30)
+    g: c.g + _.random(-30, 30)
+    b: c.b + _.random(-30, 30)
+  _.each ['r', 'g', 'b'], (k) ->
+    newColor[k] = Math.floor(
+      Math.min(Math.max(newColor[k], 0), WD.COLOR_CHANNEL_MAX))
   strength = newColor.r + newColor.g + newColor.b
-  if strength < 30
+  if strength < 50
     return WD.mutateColor(c)
-  if strength > 100
+  if strength > 150
     return WD.mutateColor(c)
   return newColor
 

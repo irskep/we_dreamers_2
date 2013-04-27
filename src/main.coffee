@@ -212,9 +212,12 @@ class WD.GameController
     fbDoors = fbChunkZero.child('doors')
 
     newPoint = room.gridPoint.add(dGridPoint)
+
     unless newPoint.toString() of @rooms
-      fbRooms.child(newPoint.toString()).set(
-        {position: newPoint, color: WD.mutateColor(room.color), lastHarvested: 0})
+      fbRooms.child(newPoint.toString()).set
+        position: newPoint
+        color: WD.mutateColor(room.color)
+        lastHarvested: 0
 
     unless @adjacentRoom(room, dGridPoint)
       if dGridPoint.x + dGridPoint.y > 1
