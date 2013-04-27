@@ -2,8 +2,6 @@ module.exports = (grunt) ->
   grunt.initConfig
     coffee:
       main:
-        options:
-          sourceMap: true
         files:
           'we_dreamers.js': 'src/*.coffee',
 
@@ -17,4 +15,4 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-coffee')
   grunt.loadNpmTasks('grunt-contrib-uglify')
   grunt.loadNpmTasks('grunt-contrib-watch')
-  grunt.registerTask('default', ['coffee'])
+  grunt.registerTask('default', ['coffee', 'watch'])
