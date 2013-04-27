@@ -34,8 +34,9 @@ WD.ensureUser = (callback, isRepeat = false) ->
             r: _.random(50, 255)
             g: _.random(50, 255)
             b: _.random(50, 255)
-          x: 0
-          y: 0
+          position:
+            x: 0
+            y: 0
         fbUsers.child(username).set(data)
       callback(username)
   else
@@ -51,8 +52,9 @@ WD.ensureUser = (callback, isRepeat = false) ->
               r: _.random(50, 255)
               g: _.random(50, 255)
               b: _.random(50, 255)
-            x: 0
-            y: 0
+            position:
+              x: 0
+              y: 0
           fbUsers.child(username).set(data)
           localStorage.setItem('username', username)
           callback(username)

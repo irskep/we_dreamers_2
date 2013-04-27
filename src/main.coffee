@@ -79,7 +79,7 @@ class WD.GameController
         .onValue =>
           nextRoom = @adjacentRoom(player.currentRoom, vector)
           return unless nextRoom
-          player.walkToRoom(nextRoom) if nextRoom
+          player.fb.child('position').set(nextRoom.gridPoint)
     keyboardToDirection('left', V2(-1, 0))
     keyboardToDirection('right', V2(1, 0))
     keyboardToDirection('up', V2(0, -1))

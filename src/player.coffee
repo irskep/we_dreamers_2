@@ -37,17 +37,11 @@ class WD.Player
     @fb = fb.child('users').child(@username)
 
     @fb.on 'value', (snapshot) =>
-      {color, x, y} = snapshot.val()
+      {color, position} = snapshot.val()
       @color = color
-      @$el.css('background-color',
-        "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
-      room = @gameController.roomAtPoint(V2(x, y))
-      if @currentRoom
-        console.log 'walking nicely'
-        @walkToRoom(room)
-      else
-        console.log 'apparently just loading in'
-        @teleportToRoom(room)
+      @$el.css('background-color', "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
+      room = @gameController.roomAtPoint(V2(position.x, position.y))
+      if @currentRoom then @walkToRoom(room) else @teleportToRoom(room)
 
     @initBaconJunk()
 
