@@ -1,6 +1,6 @@
 window.WD = window.WD or {}
 
-_showUsernamePrompt = (callback) ->
+_showUsernamePrompt = (callback, isRepeat = false) ->
   $el = $("
     <div class='username-prompt-container'>
       <form class='username-prompt'>
@@ -9,6 +9,8 @@ _showUsernamePrompt = (callback) ->
       </form>
     </div>
   ".trim()).appendTo($('body'))
+  if isRepeat
+    $("<div>(The one you tried was taken)</div>").insertAfter($el.find('input'))
   $form = $el.find('form')
   $form.on 'submit', (e) ->
     value = $el.find('input').val()
@@ -19,7 +21,7 @@ _showUsernamePrompt = (callback) ->
     false
 
 
-WD.ensureUsername = (callback) ->
+WD.ensureUsername = (callback, isRepeat = false) ->
   if localStorage.getItem('username')
     fb.child(localStorage.getItem('username')).once 'value', (snapshot) ->
       unless snapshot.val()
@@ -32,10 +34,10 @@ WD.ensureUsername = (callback) ->
           color: color
       callback(localStorage.getItem('username'))
   else
-    _showUsernamePrompt (username) =>
+    f = (username) =>
       fb.child(username).once 'value', (snapshot) ->
         if snapshot.val()
-          WD.ensureUsername(callback)
+          WD.ensureUsername(callback, true)
         else
           # win!
           color = 
@@ -47,3 +49,4 @@ WD.ensureUsername = (callback) ->
             color: color
           localStorage.setItem('username', username)
           callback(username)
+    _showUsernamePrompt(f, isRepeat)
