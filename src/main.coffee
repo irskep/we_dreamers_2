@@ -80,6 +80,9 @@ class WD.GameController
       gridPoint = V2($(e.target).data('gridX'), $(e.target).data('gridY'))
       @clickRoom(@roomAtPoint(gridPoint))
 
+    player.$el.addClass('you')
+    console.log player.$el.get(0)
+
     keyboardToDirection = (keyName, vector) =>
       @clock.tick.filter(player.isStill).filter(WD.keyboard.isDown(keyName))
         .onValue =>

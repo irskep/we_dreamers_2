@@ -2482,6 +2482,8 @@
         gridPoint = V2($(e.target).data('gridX'), $(e.target).data('gridY'));
         return _this.clickRoom(_this.roomAtPoint(gridPoint));
       });
+      player.$el.addClass('you');
+      console.log(player.$el.get(0));
       keyboardToDirection = function(keyName, vector) {
         return _this.clock.tick.filter(player.isStill).filter(WD.keyboard.isDown(keyName)).onValue(function() {
           var nextRoom;
@@ -2669,7 +2671,7 @@
       this.gameController = gameController;
       this.gridPosition = V2(0, 0);
       this.currentRoom = null;
-      this.$el = $("<div class='wd-player' data-name='" + this.name + "'></div>");
+      this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
       this.initBaconJunk();
       this.fb = fb.child('users').child(this.username);
       this.fb.on('value', function(snapshot) {

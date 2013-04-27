@@ -32,7 +32,7 @@ class WD.Player
     @gridPosition = V2(0, 0)
     @currentRoom = null
 
-    @$el = $("<div class='wd-player' data-name='#{@name}'></div>")
+    @$el = $("<div class='wd-player' data-username='#{@username}'></div>")
 
     @initBaconJunk()
 
