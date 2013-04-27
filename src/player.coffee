@@ -1,6 +1,6 @@
 window.WD = window.WD or {}
 
-lerp = (startValue, endValue, duration, dt) ->
+lerp = (dt, startValue, endValue, duration) ->
   val = startValue + (endValue - startValue) * (dt / duration)
   if endValue > startValue
     val = Math.min(endValue, val)
@@ -10,13 +10,22 @@ lerp = (startValue, endValue, duration, dt) ->
     val = Math.min(startValue, val)
   val
 
+easeInQuad = (t, a, b, d) ->
+  t /= d
+  return (b - a) *t * t + a
 
-lerpStreams = (clock, startPoint, endPoint, duration) ->
+easeOutQuad = (t, a, b, d) ->
+  t /= d
+  return -(b - a) * t * (t-2) + a
+
+
+xyStreams = (clock, startPoint, endPoint, duration, fn = lerp) ->
   startTime = clock.now()
   distance = endPoint.subtract(startPoint).length()
   tickStreamToTween = (val1, val2) ->
     clock.tick.map (currentTime) ->
-      lerp(val1, val2, duration, currentTime - startTime)
+      return fn(currentTime - startTime, val1, val2, duration)
+      return val2 if val1 == val2
 
   endTime = startTime + duration
   reachedDest = clock.tick.filter((t) -> t > endTime).take(1)
@@ -38,11 +47,11 @@ class WD.Player
 
     @fb = fb.child('users').child(@username)
 
-    @gameController.roomsLoaded.onValue =>
+    @gameController.roomsAreLoaded.filter(_.identity).onValue =>
       @bindFirebase()
 
   initBaconJunk: ->
-    @positionData = {x: 0, y: 0}
+    @positionData = V2(0, 0)
     started = false
 
     buses = {}
@@ -86,20 +95,14 @@ class WD.Player
     @isStill = isStillBus.toProperty(true)
 
   bindFirebase: ->
-    console.log 'bind firebase'
-    updateColor = (snapshot) =>
+    @fb.child('color').on 'value', (snapshot) =>
       data = snapshot.val()
-      return if @color and
-        data.r == @color.r and data.g == @color.g and data.b == @color.b
       @color = data
       @$el.css('background-color',
         "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
-    @fb.child('color').on 'value', updateColor
 
-    updatePosition = (snapshot) =>
+    @fb.child('position').on 'value', (snapshot) =>
       position = snapshot.val()
-      return if @currentRoom and
-        @currentRoom.gridPoint.equals(position)
       room = @gameController.roomAtPoint(V2(position.x, position.y))
 
       if @currentRoom != room
@@ -107,12 +110,10 @@ class WD.Player
           @walkToRoom(room)
         else
           @teleportToRoom(room)
-    @fb.child('position').on 'value', updatePosition
 
-    updateBonk = (snapshot) =>
+    @fb.child('bonk').on 'value', (snapshot) =>
       data = snapshot.val()
       @bonk(data) if data
-    @fb.child('bonk').on 'value', updateBonk
 
   teleportToRoom: (room) ->
     @currentRoom = room
@@ -121,8 +122,7 @@ class WD.Player
 
   walkToRoom: (room) ->
     @startMoving()
-    streams = lerpStreams(
-      @clock, V2(@positionData.x, @positionData.y), room.center(), 500)
+    streams = xyStreams(@clock, @positionData, room.center(), 500)
     @currentRoom = room
     streams.reachedDest.onValue =>
       @stopMoving()
@@ -130,8 +130,18 @@ class WD.Player
     @updateStreams(streams)
 
   bonk: ({x, y}) ->
-    @fb.child('bonk').set(null)
-    vector = V2(x, y)
+    @startMoving()
+    p1 = @currentRoom.center()
+    p2 = p1.add(V2(x, y).multiply(WD.ROOM_SIZE / 2))
+    streams1 = xyStreams(@clock, p1, p2, 200, easeInQuad)
+    streams1.reachedDest.onValue =>
+      #return
+      streams2 = xyStreams(@clock, p2, p1, 200, easeOutQuad)
+      streams2.reachedDest.onValue =>
+        @stopMoving()
+        @teleportToRoom(@currentRoom)
+      @updateStreams(streams2)
+    @updateStreams(streams1)
 
   remove: ->
     @$el.remove()

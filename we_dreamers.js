@@ -2518,7 +2518,8 @@
     GameController.prototype.run = function() {
       var _this = this;
 
-      this.roomsLoaded = new Bacon.Bus();
+      this.roomsLoadedBus = new Bacon.Bus();
+      this.roomsAreLoaded = this.roomsLoadedBus.toProperty(false);
       this.players = {};
       return WD.ensureUser(function(username) {
         var $loadingEl;
@@ -2562,7 +2563,7 @@
       checkRoomsLoaded = function() {
         if (anyRoomsLoaded && !stillLoadingRooms) {
           $loadingEl.remove();
-          _this.roomsLoaded.push(true);
+          _this.roomsLoadedBus.push(true);
           return;
         }
         stillLoadingRooms = false;
@@ -2667,11 +2668,11 @@
 }).call(this);
 
 (function() {
-  var lerp, lerpStreams;
+  var easeInQuad, easeOutQuad, lerp, xyStreams;
 
   window.WD = window.WD || {};
 
-  lerp = function(startValue, endValue, duration, dt) {
+  lerp = function(dt, startValue, endValue, duration) {
     var val;
 
     val = startValue + (endValue - startValue) * (dt / duration);
@@ -2685,14 +2686,30 @@
     return val;
   };
 
-  lerpStreams = function(clock, startPoint, endPoint, duration) {
+  easeInQuad = function(t, a, b, d) {
+    t /= d;
+    return (b - a) * t * t + a;
+  };
+
+  easeOutQuad = function(t, a, b, d) {
+    t /= d;
+    return -(b - a) * t * (t - 2) + a;
+  };
+
+  xyStreams = function(clock, startPoint, endPoint, duration, fn) {
     var distance, endTime, reachedDest, startTime, tickStreamToTween;
 
+    if (fn == null) {
+      fn = lerp;
+    }
     startTime = clock.now();
     distance = endPoint.subtract(startPoint).length();
     tickStreamToTween = function(val1, val2) {
       return clock.tick.map(function(currentTime) {
-        return lerp(val1, val2, duration, currentTime - startTime);
+        return fn(currentTime - startTime, val1, val2, duration);
+        if (val1 === val2) {
+          return val2;
+        }
       });
     };
     endTime = startTime + duration;
@@ -2718,7 +2735,7 @@
       this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
       this.initBaconJunk();
       this.fb = fb.child('users').child(this.username);
-      this.gameController.roomsLoaded.onValue(function() {
+      this.gameController.roomsAreLoaded.filter(_.identity).onValue(function() {
         return _this.bindFirebase();
       });
     }
@@ -2727,10 +2744,7 @@
       var buses, isStillBus, properties, started, stopMoving, updateStreams,
         _this = this;
 
-      this.positionData = {
-        x: 0,
-        y: 0
-      };
+      this.positionData = V2(0, 0);
       started = false;
       buses = {};
       properties = {};
@@ -2780,28 +2794,19 @@
     };
 
     Player.prototype.bindFirebase = function() {
-      var updateBonk, updateColor, updatePosition,
-        _this = this;
+      var _this = this;
 
-      console.log('bind firebase');
-      updateColor = function(snapshot) {
+      this.fb.child('color').on('value', function(snapshot) {
         var data;
 
         data = snapshot.val();
-        if (_this.color && data.r === _this.color.r && data.g === _this.color.g && data.b === _this.color.b) {
-          return;
-        }
         _this.color = data;
         return _this.$el.css('background-color', "rgb(" + _this.color.r + ", " + _this.color.g + ", " + _this.color.b + ")");
-      };
-      this.fb.child('color').on('value', updateColor);
-      updatePosition = function(snapshot) {
+      });
+      this.fb.child('position').on('value', function(snapshot) {
         var position, room;
 
         position = snapshot.val();
-        if (_this.currentRoom && _this.currentRoom.gridPoint.equals(position)) {
-          return;
-        }
         room = _this.gameController.roomAtPoint(V2(position.x, position.y));
         if (_this.currentRoom !== room) {
           if (_this.currentRoom) {
@@ -2810,17 +2815,15 @@
             return _this.teleportToRoom(room);
           }
         }
-      };
-      this.fb.child('position').on('value', updatePosition);
-      updateBonk = function(snapshot) {
+      });
+      return this.fb.child('bonk').on('value', function(snapshot) {
         var data;
 
         data = snapshot.val();
         if (data) {
           return _this.bonk(data);
         }
-      };
-      return this.fb.child('bonk').on('value', updateBonk);
+      });
     };
 
     Player.prototype.teleportToRoom = function(room) {
@@ -2839,7 +2842,7 @@
         _this = this;
 
       this.startMoving();
-      streams = lerpStreams(this.clock, V2(this.positionData.x, this.positionData.y), room.center(), 500);
+      streams = xyStreams(this.clock, this.positionData, room.center(), 500);
       this.currentRoom = room;
       streams.reachedDest.onValue(function() {
         _this.stopMoving();
@@ -2849,11 +2852,25 @@
     };
 
     Player.prototype.bonk = function(_arg) {
-      var vector, x, y;
+      var p1, p2, streams1, x, y,
+        _this = this;
 
       x = _arg.x, y = _arg.y;
-      this.fb.child('bonk').set(null);
-      return vector = V2(x, y);
+      this.startMoving();
+      p1 = this.currentRoom.center();
+      p2 = p1.add(V2(x, y).multiply(WD.ROOM_SIZE / 2));
+      streams1 = xyStreams(this.clock, p1, p2, 200, easeInQuad);
+      streams1.reachedDest.onValue(function() {
+        var streams2;
+
+        streams2 = xyStreams(_this.clock, p2, p1, 200, easeOutQuad);
+        streams2.reachedDest.onValue(function() {
+          _this.stopMoving();
+          return _this.teleportToRoom(_this.currentRoom);
+        });
+        return _this.updateStreams(streams2);
+      });
+      return this.updateStreams(streams1);
     };
 
     Player.prototype.remove = function() {

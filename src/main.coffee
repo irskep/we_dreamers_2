@@ -77,7 +77,8 @@ class WD.GameController
             type: 'basic'
 
   run: ->
-    @roomsLoaded = new Bacon.Bus()
+    @roomsLoadedBus = new Bacon.Bus()
+    @roomsAreLoaded = @roomsLoadedBus.toProperty(false)
     @players = {}
     WD.ensureUser (username) =>
       $loadingEl = $("<div class='status-message'>Loading...</div>").appendTo(@$el)
@@ -107,7 +108,7 @@ class WD.GameController
     checkRoomsLoaded = =>
       if anyRoomsLoaded and not stillLoadingRooms
         $loadingEl.remove()
-        @roomsLoaded.push(true)
+        @roomsLoadedBus.push(true)
         return
       stillLoadingRooms = false
       setTimeout checkRoomsLoaded, 200
