@@ -44,28 +44,46 @@ class WD.GameController
     @doors[door.hash2()].push(door)
     @$worldContainer.append(door.$el)
 
-  initTestData: =>
-    @r1 = new WD.Room(V2(0, 0), 50, 0, 0, 100)
-    @r2 = new WD.Room(V2(1, 0), 30, 20, 0, 100)
-    @r3 = new WD.Room(V2(0, 1), 0, 0, 30, 100)
-    @r4 = new WD.Room(V2(0, -1), 0, 30, 30, 100)
-    @r5 = new WD.Room(V2(-1, 0), 0, 30, 0, 100)
-    @addRoom(@r1)
-    @addRoom(@r2)
-    @addRoom(@r3)
-    @addRoom(@r4)
-    @addRoom(@r5)
-    @addDoor new WD.Door(@r1, @r2, 'basic', @rooms)
-    @addDoor new WD.Door(@r1, @r3, 'basic', @rooms)
-    @addDoor new WD.Door(@r1, @r4, 'basic', @rooms)
-    @addDoor new WD.Door(@r1, @r5, 'basic', @rooms)
+  initBaseData: =>
+    fbChunkZero = fb.child('chunks').child(WD.chunkForPoint(V2(0, 0)))
+    fbRooms = fbChunkZero.child('rooms')
+    fbDoors = fbChunkZero.child('doors')
+    fbRoomZero = fbRooms.child(V2(0, 0).toString())
+    fbRoomZero.on 'value', (snapshot) =>
+      center = V2(0, 0)
+      left = V2(-1, 0)
+      right = V2(1, 0)
+      top = V2(0, -1)
+      bottom = V2(0, 1)
+      unless snapshot.val()
+        console.log 'initializing rooms'
+        fbRoomZero.set(
+          {position: center, color: {r: 30, g: 0, b: 0}, health: 100})
+        fbRooms.child(top.toString()).set(
+          {position: top, color: {r: 30, g: 30, b: 0}, health: 100})
+        fbRooms.child(bottom.toString()).set(
+          {position: bottom, color: {r: 0, g: 0, b: 30}, health: 100})
+        fbRooms.child(left.toString()).set(
+          {position: left, color: {r: 0, g: 30, b: 30}, health: 100})
+        fbRooms.child(right.toString()).set(
+          {position: right, color: {r: 0, g: 30, b: 0}, health: 100})
+
+        _.each [
+          [center, right], [left, center], [top, center], [center, bottom]
+        ], ([a, b]) ->
+          fbDoors.child(a.toString() + b.toString()).set
+            room1: a
+            room2: b
+            type: 'basic'
 
   run: ->
+    @roomsLoaded = new Bacon.Bus()
     @players = {}
     WD.ensureUser (username) =>
+      $loadingEl = $("<div class='status-message'>Loading...</div>").appendTo(@$el)
       @username = username
       @clock = new WD.Clock()
-      @initTestData()
+      @initBaseData()
       @player = new WD.Player(@clock, username, this)
       @interactify(@player)
       @$interactiveContainer.append(@player.$el)
@@ -75,6 +93,31 @@ class WD.GameController
         return if data.username == username
         @players[data.username] = new WD.Player(@clock, data.username, this)
         @$interactiveContainer.append(@players[data.username].$el)
+
+      anyRoomsLoaded = false
+      stillLoadingRooms = false
+      checkRoomsLoaded = =>
+        if anyRoomsLoaded and not stillLoadingRooms
+          $loadingEl.remove()
+          @roomsLoaded.push(true)
+        stillLoadingRooms = false
+        setTimeout checkRoomsLoaded, 200
+      checkRoomsLoaded()
+
+      fb.child('chunks/(0, 0)/rooms').on 'child_added', (snapshot) =>
+        data = snapshot.val()
+        @addRoom new WD.Room(
+          V2(data.position.x, data.position.y), data.color, data.health)
+        stillLoadingRooms = true
+        anyRoomsLoaded = true
+
+      fb.child('chunks/(0, 0)/doors').on 'child_added', (snapshot) =>
+        data = snapshot.val()
+        @addDoor new WD.Door(
+          V2(data.room1.x, data.room1.y),
+          V2(data.room2.x, data.room2.y), data.type)
+        stillLoadingRooms = true
+        anyRoomsLoaded = true
 
   interactify: (player) ->
     @$worldContainer.asEventStream('click', '.wd-room').onValue (e) =>
@@ -110,60 +153,3 @@ class WD.GameController
       door.other(room.gridPoint).equals(p2)
     )
     return @roomAtPoint(p2)
-
-class WD.Room
-
-  constructor: (@gridPoint, @amtRed, @amtGreen, @amtBlue, @fullness) ->
-    @color = WD.subtractiveColor(@amtRed, @amtGreen, @amtBlue, @fullness / 100)
-    @$el = $("
-        <div class='wd-room rounded-rect'
-          data-grid-x='#{@gridPoint.x}'
-          data-grid-y='#{@gridPoint.y}'
-        ></div>
-      ".trim()).css
-      width: WD.ROOM_SIZE
-      height: WD.ROOM_SIZE
-      left: @gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING
-      top: @gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING
-      'background-color': @color
-
-  center: ->
-    V2(@gridPoint.x * WD.GRID_SIZE + WD.GRID_SIZE / 2,
-       @gridPoint.y * WD.GRID_SIZE + WD.GRID_SIZE / 2)
-
-  hash: -> @gridPoint.toString()
-
-class WD.Door
-
-  constructor: (room1, room2, @type) ->
-    if room1.gridPoint.y > room2.gridPoint.y or room1.gridPoint.x > room2.gridPoint.x
-      tmp = room1
-      room1 = room2
-      room2 = tmp
-    @gridPoint1 = room1.gridPoint
-    @gridPoint2 = room2.gridPoint
-    if @gridPoint1.x == @gridPoint2.x
-      @initVertical(room1.color, room2.color)
-    else
-      @initHorizontal(room1.color, room2.color)
-
-  hash1: -> @gridPoint1.toString()
-  hash2: -> @gridPoint2.toString()
-  other: (p) ->
-    if p.equals(@gridPoint1) then @gridPoint2 else @gridPoint1
-
-  initVertical: (color1, color2) ->
-    @$el = $("<div class='wd-door #{@type}'></div>").css
-      width: WD.DOOR_SIZE
-      height: WD.ROOM_PADDING * 2
-      left: WD.GRID_SIZE * @gridPoint1.x + 20
-      top: @gridPoint1.y * WD.GRID_SIZE + WD.GRID_SIZE - WD.ROOM_PADDING
-    WD.cssGradientVertical(@$el, color1, color2)
-
-  initHorizontal: (color1, color2) ->
-    @$el = $("<div class='wd-door #{@type}'></div>").css
-      width: WD.ROOM_PADDING * 2
-      height: WD.DOOR_SIZE
-      left: @gridPoint2.x * WD.GRID_SIZE - WD.ROOM_PADDING
-      top: WD.GRID_SIZE * @gridPoint1.y + 20
-    WD.cssGradientHorizontal(@$el, color1, color2)

@@ -2349,6 +2349,10 @@
       return this.x === p2.x && this.y === p2.y;
     };
 
+    Vector2.prototype.isLeftOrAbove = function(p2) {
+      return this.x < p2.x || this.y < p2.y;
+    };
+
     Vector2.prototype.toString = function() {
       return "{" + this.x + ", " + this.y + "}";
     };
@@ -2402,7 +2406,7 @@
   WD.GameController = (function() {
     function GameController($el) {
       this.$el = $el;
-      this.initTestData = __bind(this.initTestData, this);
+      this.initBaseData = __bind(this.initBaseData, this);
       this.$el.append($('<div class="wd-inner"></div>'));
       this.$worldContainer = $('<div class="room-container"></div>').appendTo(this.$el.find('.wd-inner')).css({
         position: 'absolute',
@@ -2434,35 +2438,99 @@
       return this.$worldContainer.append(door.$el);
     };
 
-    GameController.prototype.initTestData = function() {
-      this.r1 = new WD.Room(V2(0, 0), 50, 0, 0, 100);
-      this.r2 = new WD.Room(V2(1, 0), 30, 20, 0, 100);
-      this.r3 = new WD.Room(V2(0, 1), 0, 0, 30, 100);
-      this.r4 = new WD.Room(V2(0, -1), 0, 30, 30, 100);
-      this.r5 = new WD.Room(V2(-1, 0), 0, 30, 0, 100);
-      this.addRoom(this.r1);
-      this.addRoom(this.r2);
-      this.addRoom(this.r3);
-      this.addRoom(this.r4);
-      this.addRoom(this.r5);
-      this.addDoor(new WD.Door(this.r1, this.r2, 'basic', this.rooms));
-      this.addDoor(new WD.Door(this.r1, this.r3, 'basic', this.rooms));
-      this.addDoor(new WD.Door(this.r1, this.r4, 'basic', this.rooms));
-      return this.addDoor(new WD.Door(this.r1, this.r5, 'basic', this.rooms));
+    GameController.prototype.initBaseData = function() {
+      var fbChunkZero, fbDoors, fbRoomZero, fbRooms,
+        _this = this;
+
+      fbChunkZero = fb.child('chunks').child(WD.chunkForPoint(V2(0, 0)));
+      fbRooms = fbChunkZero.child('rooms');
+      fbDoors = fbChunkZero.child('doors');
+      fbRoomZero = fbRooms.child(V2(0, 0).toString());
+      return fbRoomZero.on('value', function(snapshot) {
+        var bottom, center, left, right, top;
+
+        center = V2(0, 0);
+        left = V2(-1, 0);
+        right = V2(1, 0);
+        top = V2(0, -1);
+        bottom = V2(0, 1);
+        if (!snapshot.val()) {
+          console.log('initializing rooms');
+          fbRoomZero.set({
+            position: center,
+            color: {
+              r: 30,
+              g: 0,
+              b: 0
+            },
+            health: 100
+          });
+          fbRooms.child(top.toString()).set({
+            position: top,
+            color: {
+              r: 30,
+              g: 30,
+              b: 0
+            },
+            health: 100
+          });
+          fbRooms.child(bottom.toString()).set({
+            position: bottom,
+            color: {
+              r: 0,
+              g: 0,
+              b: 30
+            },
+            health: 100
+          });
+          fbRooms.child(left.toString()).set({
+            position: left,
+            color: {
+              r: 0,
+              g: 30,
+              b: 30
+            },
+            health: 100
+          });
+          fbRooms.child(right.toString()).set({
+            position: right,
+            color: {
+              r: 0,
+              g: 30,
+              b: 0
+            },
+            health: 100
+          });
+          return _.each([[center, right], [left, center], [top, center], [center, bottom]], function(_arg) {
+            var a, b;
+
+            a = _arg[0], b = _arg[1];
+            return fbDoors.child(a.toString() + b.toString()).set({
+              room1: a,
+              room2: b,
+              type: 'basic'
+            });
+          });
+        }
+      });
     };
 
     GameController.prototype.run = function() {
       var _this = this;
 
+      this.roomsLoaded = new Bacon.Bus();
       this.players = {};
       return WD.ensureUser(function(username) {
+        var $loadingEl, anyRoomsLoaded, checkRoomsLoaded, stillLoadingRooms;
+
+        $loadingEl = $("<div class='status-message'>Loading...</div>").appendTo(_this.$el);
         _this.username = username;
         _this.clock = new WD.Clock();
-        _this.initTestData();
+        _this.initBaseData();
         _this.player = new WD.Player(_this.clock, username, _this);
         _this.interactify(_this.player);
         _this.$interactiveContainer.append(_this.player.$el);
-        return fb.child('users').on('child_added', function(snapshot) {
+        fb.child('users').on('child_added', function(snapshot) {
           var data;
 
           data = snapshot.val();
@@ -2471,6 +2539,33 @@
           }
           _this.players[data.username] = new WD.Player(_this.clock, data.username, _this);
           return _this.$interactiveContainer.append(_this.players[data.username].$el);
+        });
+        anyRoomsLoaded = false;
+        stillLoadingRooms = false;
+        checkRoomsLoaded = function() {
+          if (anyRoomsLoaded && !stillLoadingRooms) {
+            $loadingEl.remove();
+            _this.roomsLoaded.push(true);
+          }
+          stillLoadingRooms = false;
+          return setTimeout(checkRoomsLoaded, 200);
+        };
+        checkRoomsLoaded();
+        fb.child('chunks/(0, 0)/rooms').on('child_added', function(snapshot) {
+          var data;
+
+          data = snapshot.val();
+          _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.health));
+          stillLoadingRooms = true;
+          return anyRoomsLoaded = true;
+        });
+        return fb.child('chunks/(0, 0)/doors').on('child_added', function(snapshot) {
+          var data;
+
+          data = snapshot.val();
+          _this.addDoor(new WD.Door(V2(data.room1.x, data.room1.y), V2(data.room2.x, data.room2.y), data.type));
+          stillLoadingRooms = true;
+          return anyRoomsLoaded = true;
         });
       });
     };
@@ -2534,94 +2629,6 @@
 
   })();
 
-  WD.Room = (function() {
-    function Room(gridPoint, amtRed, amtGreen, amtBlue, fullness) {
-      this.gridPoint = gridPoint;
-      this.amtRed = amtRed;
-      this.amtGreen = amtGreen;
-      this.amtBlue = amtBlue;
-      this.fullness = fullness;
-      this.color = WD.subtractiveColor(this.amtRed, this.amtGreen, this.amtBlue, this.fullness / 100);
-      this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        ></div>      ").trim()).css({
-        width: WD.ROOM_SIZE,
-        height: WD.ROOM_SIZE,
-        left: this.gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING,
-        top: this.gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING,
-        'background-color': this.color
-      });
-    }
-
-    Room.prototype.center = function() {
-      return V2(this.gridPoint.x * WD.GRID_SIZE + WD.GRID_SIZE / 2, this.gridPoint.y * WD.GRID_SIZE + WD.GRID_SIZE / 2);
-    };
-
-    Room.prototype.hash = function() {
-      return this.gridPoint.toString();
-    };
-
-    return Room;
-
-  })();
-
-  WD.Door = (function() {
-    function Door(room1, room2, type) {
-      var tmp;
-
-      this.type = type;
-      if (room1.gridPoint.y > room2.gridPoint.y || room1.gridPoint.x > room2.gridPoint.x) {
-        tmp = room1;
-        room1 = room2;
-        room2 = tmp;
-      }
-      this.gridPoint1 = room1.gridPoint;
-      this.gridPoint2 = room2.gridPoint;
-      if (this.gridPoint1.x === this.gridPoint2.x) {
-        this.initVertical(room1.color, room2.color);
-      } else {
-        this.initHorizontal(room1.color, room2.color);
-      }
-    }
-
-    Door.prototype.hash1 = function() {
-      return this.gridPoint1.toString();
-    };
-
-    Door.prototype.hash2 = function() {
-      return this.gridPoint2.toString();
-    };
-
-    Door.prototype.other = function(p) {
-      if (p.equals(this.gridPoint1)) {
-        return this.gridPoint2;
-      } else {
-        return this.gridPoint1;
-      }
-    };
-
-    Door.prototype.initVertical = function(color1, color2) {
-      this.$el = $("<div class='wd-door " + this.type + "'></div>").css({
-        width: WD.DOOR_SIZE,
-        height: WD.ROOM_PADDING * 2,
-        left: WD.GRID_SIZE * this.gridPoint1.x + 20,
-        top: this.gridPoint1.y * WD.GRID_SIZE + WD.GRID_SIZE - WD.ROOM_PADDING
-      });
-      return WD.cssGradientVertical(this.$el, color1, color2);
-    };
-
-    Door.prototype.initHorizontal = function(color1, color2) {
-      this.$el = $("<div class='wd-door " + this.type + "'></div>").css({
-        width: WD.ROOM_PADDING * 2,
-        height: WD.DOOR_SIZE,
-        left: this.gridPoint2.x * WD.GRID_SIZE - WD.ROOM_PADDING,
-        top: WD.GRID_SIZE * this.gridPoint1.y + 20
-      });
-      return WD.cssGradientHorizontal(this.$el, color1, color2);
-    };
-
-    return Door;
-
-  })();
-
 }).call(this);
 
 (function() {
@@ -2665,32 +2672,33 @@
   };
 
   WD.Player = (function() {
-    function Player(clock, username, gameController, cssClass) {
+    function Player(clock, username, gameController) {
       var _this = this;
 
       this.clock = clock;
       this.username = username;
       this.gameController = gameController;
-      if (cssClass == null) {
-        cssClass = "";
-      }
       this.gridPosition = V2(0, 0);
       this.currentRoom = null;
       this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
       this.initBaconJunk();
       this.fb = fb.child('users').child(this.username);
-      this.fb.on('value', function(snapshot) {
-        var color, position, room, _ref;
+      this.gameController.roomsLoaded.onValue(function() {
+        return _this.fb.on('value', function(snapshot) {
+          var color, position, room, _ref;
 
-        _ref = snapshot.val(), color = _ref.color, position = _ref.position;
-        _this.color = color;
-        _this.$el.css('background-color', "rgb(" + _this.color.r + ", " + _this.color.g + ", " + _this.color.b + ")");
-        room = _this.gameController.roomAtPoint(V2(position.x, position.y));
-        if (_this.currentRoom) {
-          return _this.walkToRoom(room);
-        } else {
-          return _this.teleportToRoom(room);
-        }
+          _ref = snapshot.val(), color = _ref.color, position = _ref.position;
+          _this.color = color;
+          _this.$el.css('background-color', "rgb(" + _this.color.r + ", " + _this.color.g + ", " + _this.color.b + ")");
+          room = _this.gameController.roomAtPoint(V2(position.x, position.y));
+          if (_this.currentRoom !== room) {
+            if (_this.currentRoom) {
+              return _this.walkToRoom(room);
+            } else {
+              return _this.teleportToRoom(room);
+            }
+          }
+        });
       });
     }
 
@@ -2892,7 +2900,8 @@
     var x, y;
 
     x = _arg.x, y = _arg.y;
-    return "[" + (Math.floor(x / 100)) + ", " + (Math.floor(y / 100)) + "]";
+    return "(0, 0)";
+    return "(" + (Math.floor(x + 50 / 100)) + ", " + (Math.floor(y + 50 / 100)) + ")";
   };
 
   WD.subtractiveColor = function(r, g, b, fraction) {
@@ -2909,6 +2918,7 @@
   };
 
   WD.cssGradientVertical = function($el, a, b) {
+    console.log(a, b);
     return $el.css('background', "-webkit-gradient(linear, left top, left bottom, from(" + a + "), to(" + b + "))");
   };
 
@@ -2937,5 +2947,146 @@
       return WD.keyboard.downs(key).map(true).merge(WD.keyboard.ups(key).map(false)).merge($('window').asEventStream('focus').map(false)).toProperty(false);
     })
   };
+
+}).call(this);
+
+(function() {
+  var __slice = [].slice;
+
+  window.WD = window.WD || {};
+
+  WD.Room = (function() {
+    function Room(gridPoint, color, fullness) {
+      this.gridPoint = gridPoint;
+      this.color = color;
+      this.fullness = fullness;
+      this.color = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.fullness / 100);
+      this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        ></div>      ").trim()).css({
+        width: WD.ROOM_SIZE,
+        height: WD.ROOM_SIZE,
+        left: this.gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING,
+        top: this.gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING,
+        'background-color': this.color
+      });
+    }
+
+    Room.prototype.center = function() {
+      return V2(this.gridPoint.x * WD.GRID_SIZE + WD.GRID_SIZE / 2, this.gridPoint.y * WD.GRID_SIZE + WD.GRID_SIZE / 2);
+    };
+
+    Room.prototype.hash = function() {
+      return this.gridPoint.toString();
+    };
+
+    return Room;
+
+  })();
+
+  WD.Door = (function() {
+    function Door() {
+      var args, tmp,
+        _this = this;
+
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      console.log(args);
+      this.gridPoint1 = args[0], this.gridPoint2 = args[1], this.type = args[2];
+      if (this.gridPoint2.isLeftOrAbove(this.gridPoint1)) {
+        tmp = this.gridPoint1;
+        this.gridPoint1 = this.gridPoint2;
+        this.gridPoint2 = tmp;
+      }
+      this.color1 = {
+        r: 0,
+        g: 0,
+        b: 0,
+        health: 100
+      };
+      this.color2 = {
+        r: 0,
+        g: 0,
+        b: 0,
+        health: 100
+      };
+      if (this.gridPoint1.x === this.gridPoint2.x) {
+        this.initVertical();
+      } else {
+        this.initHorizontal();
+      }
+      this.fb = fb.child('chunks/(0, 0)/doors').child(this.gridPoint1.toString() + this.gridPoint2.toString());
+      this.fbRoom1 = fb.child('chunks/(0, 0)/rooms').child(this.gridPoint1.toString());
+      this.fbRoom2 = fb.child('chunks/(0, 0)/rooms').child(this.gridPoint2.toString());
+      this.fbRoom1.on('value', function(snapshot) {
+        var data;
+
+        data = snapshot.val();
+        _this.color1 = data.color;
+        _this.color1.health = data.health;
+        return _this.updateColors();
+      });
+      this.fbRoom2.on('value', function(snapshot) {
+        var data;
+
+        data = snapshot.val();
+        _this.color2 = data.color;
+        _this.color2.health = data.health;
+        return _this.updateColors();
+      });
+    }
+
+    Door.prototype.hash1 = function() {
+      return this.gridPoint1.toString();
+    };
+
+    Door.prototype.hash2 = function() {
+      return this.gridPoint2.toString();
+    };
+
+    Door.prototype.other = function(p) {
+      if (p.equals(this.gridPoint1)) {
+        return this.gridPoint2;
+      } else {
+        return this.gridPoint1;
+      }
+    };
+
+    Door.prototype.initVertical = function() {
+      this.direction = 'vertical';
+      return this.$el = $("<div class='wd-door " + this.type + "'></div>").css({
+        width: WD.DOOR_SIZE,
+        height: WD.ROOM_PADDING * 2,
+        left: WD.GRID_SIZE * this.gridPoint1.x + 20,
+        top: this.gridPoint1.y * WD.GRID_SIZE + WD.GRID_SIZE - WD.ROOM_PADDING
+      });
+    };
+
+    Door.prototype.initHorizontal = function() {
+      this.direction = 'horizontal';
+      return this.$el = $("<div class='wd-door " + this.type + "'></div>").css({
+        width: WD.ROOM_PADDING * 2,
+        height: WD.DOOR_SIZE,
+        left: this.gridPoint2.x * WD.GRID_SIZE - WD.ROOM_PADDING,
+        top: WD.GRID_SIZE * this.gridPoint1.y + 20
+      });
+    };
+
+    Door.prototype.updateColors = function() {
+      var c;
+
+      c = function(_arg) {
+        var b, g, health, r;
+
+        r = _arg.r, g = _arg.g, b = _arg.b, health = _arg.health;
+        return WD.subtractiveColor(r, g, b, health / 100);
+      };
+      if (this.direction === 'vertical') {
+        return WD.cssGradientVertical(this.$el, c(this.color1), c(this.color2));
+      } else {
+        return WD.cssGradientHorizontal(this.$el, c(this.color1), c(this.color2));
+      }
+    };
+
+    return Door;
+
+  })();
 
 }).call(this);

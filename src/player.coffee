@@ -28,7 +28,7 @@ lerpStreams = (clock, startPoint, endPoint, duration) ->
 
 class WD.Player
 
-  constructor: (@clock, @username, @gameController, cssClass = "") ->
+  constructor: (@clock, @username, @gameController) ->
     @gridPosition = V2(0, 0)
     @currentRoom = null
 
@@ -37,12 +37,19 @@ class WD.Player
     @initBaconJunk()
 
     @fb = fb.child('users').child(@username)
-    @fb.on 'value', (snapshot) =>
-      {color, position} = snapshot.val()
-      @color = color
-      @$el.css('background-color', "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
-      room = @gameController.roomAtPoint(V2(position.x, position.y))
-      if @currentRoom then @walkToRoom(room) else @teleportToRoom(room)
+
+    @gameController.roomsLoaded.onValue =>
+        @fb.on 'value', (snapshot) =>
+          {color, position} = snapshot.val()
+          @color = color
+          @$el.css('background-color', "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
+          room = @gameController.roomAtPoint(V2(position.x, position.y))
+
+          if @currentRoom != room
+            if @currentRoom
+              @walkToRoom(room)
+            else
+              @teleportToRoom(room)
 
   initBaconJunk: ->
     @positionData = {x: 0, y: 0}

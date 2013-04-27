@@ -8,7 +8,9 @@ WD.DOOR_SIZE = WD.GRID_SIZE - 40
 WD.run = (selector) -> (new WD.GameController($(selector))).run()
 
 WD.chunkForPoint = ({x, y}) ->
-    "[#{Math.floor(x / 100)}, #{Math.floor(y / 100)}]"
+  return "(0, 0)"
+  # later
+  "(#{Math.floor(x + 50 / 100)}, #{Math.floor(y + 50 / 100)})"
 
 WD.subtractiveColor = (r, g, b, fraction = 1) ->
     r *= fraction
@@ -18,12 +20,13 @@ WD.subtractiveColor = (r, g, b, fraction = 1) ->
     "rgb(#{floor + r}, #{floor + g}, #{floor + b})"
 
 WD.cssGradientVertical = ($el, a, b) ->
-    $el.css('background',
-      "-webkit-gradient(linear, left top, left bottom, from(#{a}), to(#{b}))")
+  console.log a, b
+  $el.css('background',
+    "-webkit-gradient(linear, left top, left bottom, from(#{a}), to(#{b}))")
 
 WD.cssGradientHorizontal = ($el, a, b) ->
-    $el.css('background',
-      "-webkit-gradient(linear, left top, right top, from(#{a}), to(#{b}))")
+  $el.css('background',
+    "-webkit-gradient(linear, left top, right top, from(#{a}), to(#{b}))")
 
 
 WD.keyboard =
