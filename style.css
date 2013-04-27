@@ -1,0 +1,23 @@
+#we_dreamers {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: black;
+  overflow: hidden;
+}
+
+.wd-inner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.wd-room {
+  position: absolute;
+}
+
+.wd-room.rounded-rect {
+  border-radius: 10px;
+}

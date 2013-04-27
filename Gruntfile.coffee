@@ -5,7 +5,7 @@ module.exports = (grunt) ->
         options:
           sourceMaps: true
         files:
-          'we_dreamers.js': 'src/main.coffee',
+          'we_dreamers.js': 'src/*.coffee',
 
     uglify: {}
 
