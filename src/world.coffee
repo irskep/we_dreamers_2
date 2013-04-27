@@ -2,8 +2,8 @@ window.WD = window.WD or {}
 
 class WD.Room
 
-  constructor: (@gridPoint, @color, @fullness) ->
-    @color = WD.subtractiveColor(@color.r, @color.g, @color.b, @fullness / 100)
+  constructor: (@gridPoint, @color, @health) ->
+    @color = WD.subtractiveColor(@color.r, @color.g, @color.b, @health / 100)
     @$el = $("
         <div class='wd-room rounded-rect'
           data-grid-x='#{@gridPoint.x}'

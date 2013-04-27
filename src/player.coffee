@@ -39,17 +39,18 @@ class WD.Player
     @fb = fb.child('users').child(@username)
 
     @gameController.roomsLoaded.onValue =>
-        @fb.on 'value', (snapshot) =>
-          {color, position} = snapshot.val()
-          @color = color
-          @$el.css('background-color', "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
-          room = @gameController.roomAtPoint(V2(position.x, position.y))
+      @fb.on 'value', (snapshot) =>
+        {color, position} = snapshot.val()
+        @color = color
+        @$el.css('background-color',
+          "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
+        room = @gameController.roomAtPoint(V2(position.x, position.y))
 
-          if @currentRoom != room
-            if @currentRoom
-              @walkToRoom(room)
-            else
-              @teleportToRoom(room)
+        if @currentRoom != room
+          if @currentRoom
+            @walkToRoom(room)
+          else
+            @teleportToRoom(room)
 
   initBaconJunk: ->
     @positionData = {x: 0, y: 0}
@@ -109,3 +110,7 @@ class WD.Player
       @stopMoving()
       @teleportToRoom(room)
     @updateStreams(streams)
+
+  remove: ->
+    @$el.remove()
+    @fb.off('value')

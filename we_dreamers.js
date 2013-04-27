@@ -2530,15 +2530,24 @@
         _this.player = new WD.Player(_this.clock, username, _this);
         _this.interactify(_this.player);
         _this.$interactiveContainer.append(_this.player.$el);
-        fb.child('users').on('child_added', function(snapshot) {
+        fb.child('online_users').on('child_added', function(snapshot) {
           var data;
 
           data = snapshot.val();
-          if (data.username === username) {
+          if (data === username) {
             return;
           }
-          _this.players[data.username] = new WD.Player(_this.clock, data.username, _this);
-          return _this.$interactiveContainer.append(_this.players[data.username].$el);
+          _this.players[data] = new WD.Player(_this.clock, data, _this);
+          return _this.$interactiveContainer.append(_this.players[data].$el);
+        });
+        fb.child('online_users').on('child_removed', function(snapshot) {
+          var data;
+
+          data = snapshot.val();
+          if (data === username || !(data in _this.players)) {
+            return;
+          }
+          return _this.players[data].remove();
         });
         anyRoomsLoaded = false;
         stillLoadingRooms = false;
@@ -2571,9 +2580,12 @@
     };
 
     GameController.prototype.interactify = function(player) {
-      var keyboardToDirection,
+      var fbOnline, keyboardToDirection,
         _this = this;
 
+      fbOnline = fb.child('online_users').child(player.username);
+      fbOnline.set(player.username);
+      fbOnline.onDisconnect().remove();
       this.$worldContainer.asEventStream('click', '.wd-room').onValue(function(e) {
         var gridPoint;
 
@@ -2783,6 +2795,11 @@
       return this.updateStreams(streams);
     };
 
+    Player.prototype.remove = function() {
+      this.$el.remove();
+      return this.fb.off('value');
+    };
+
     return Player;
 
   })();
@@ -2955,11 +2972,11 @@
   window.WD = window.WD || {};
 
   WD.Room = (function() {
-    function Room(gridPoint, color, fullness) {
+    function Room(gridPoint, color, health) {
       this.gridPoint = gridPoint;
       this.color = color;
-      this.fullness = fullness;
-      this.color = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.fullness / 100);
+      this.health = health;
+      this.color = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.health / 100);
       this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        ></div>      ").trim()).css({
         width: WD.ROOM_SIZE,
         height: WD.ROOM_SIZE,

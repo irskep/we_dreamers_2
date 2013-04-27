@@ -88,11 +88,16 @@ class WD.GameController
       @interactify(@player)
       @$interactiveContainer.append(@player.$el)
 
-      fb.child('users').on 'child_added', (snapshot) =>
+      fb.child('online_users').on 'child_added', (snapshot) =>
         data = snapshot.val()
-        return if data.username == username
-        @players[data.username] = new WD.Player(@clock, data.username, this)
-        @$interactiveContainer.append(@players[data.username].$el)
+        return if data == username
+        @players[data] = new WD.Player(@clock, data, this)
+        @$interactiveContainer.append(@players[data].$el)
+
+      fb.child('online_users').on 'child_removed', (snapshot) =>
+        data = snapshot.val()
+        return if data == username or not (data of @players)
+        @players[data].remove()
 
       anyRoomsLoaded = false
       stillLoadingRooms = false
@@ -120,6 +125,10 @@ class WD.GameController
         anyRoomsLoaded = true
 
   interactify: (player) ->
+    fbOnline = fb.child('online_users').child(player.username)
+    fbOnline.set(player.username)
+    fbOnline.onDisconnect().remove()
+
     @$worldContainer.asEventStream('click', '.wd-room').onValue (e) =>
       gridPoint = V2($(e.target).data('gridX'), $(e.target).data('gridY'))
       @clickRoom(@roomAtPoint(gridPoint))
