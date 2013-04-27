@@ -59,3 +59,19 @@ WD.ensureUser = (callback, isRepeat = false) ->
           localStorage.setItem('username', username)
           callback(username)
     _showUsernamePrompt(f, isRepeat)
+
+
+WD.showStats = (player) =>
+  $el = $("<div class='stats'>").appendTo('body')
+  template = _.template """
+    <div class="stat-color stat-r"> </div>
+    <div class="stat-color stat-g"> </div>
+    <div class="stat-color stat-b"> </div>
+  """
+  player.fb.child('stats').on 'value', (snapshot) ->
+    data = snapshot.val()
+    $el.html(template(data))
+    _.each ['r', 'g', 'b'], (k) ->
+      $el.find(".stat-#{k}").css
+        'margin-top': WD.MAX_BUCKET - data[k]
+        'height': data[k]

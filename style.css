@@ -71,3 +71,36 @@
   font-size: 24px;
   color: white;
 }
+
+.stats {
+  padding: 10px 0;
+  z-index: 1000;
+  position: absolute;
+  left: 0;
+  top: 0
+  width: 200px;
+  background-color: white;
+}
+
+.stat-color {
+  float: left;
+  width: 20px;
+  margin-right: 10px;
+}
+
+.stat-r {
+  margin-left: 10px;
+  background-color: #a00;
+}
+
+.stat-g {
+  background-color: #0a0;
+}
+
+.stat-b {
+  background-color: #00a;
+}
+
+.clearfix {
+  clear: both;
+}

@@ -2654,11 +2654,12 @@
       WD.keyboard.downs('space').filter(player.isStill).onValue(function() {
         return _this.harvest(player.currentRoom);
       });
-      return _.each(player.positionProperties, function(property, k) {
+      _.each(player.positionProperties, function(property, k) {
         return property.onValue(function(v) {
           return _this.moveWorldContainer(k, -v);
         });
       });
+      return WD.showStats(player);
     };
 
     GameController.prototype.moveWorldContainer = function(k, v) {
@@ -2733,7 +2734,7 @@
       strength = WD.growiness(room.lastHarvested);
       room.fb.child('lastHarvested').set(WD.time());
       return _.each(['r', 'g', 'b'], function(k) {
-        return _this.player.fb.child('stats').child(k).set(_this.player.stats[k] + room.color[k] * strength);
+        return _this.player.fb.child('stats').child(k).set(Math.min(_this.player.stats[k] + room.color[k] * strength, WD.MAX_BUCKET));
       });
     };
 
@@ -2976,7 +2977,8 @@
 }).call(this);
 
 (function() {
-  var _showUsernamePrompt;
+  var _showUsernamePrompt,
+    _this = this;
 
   window.WD = window.WD || {};
 
@@ -3065,6 +3067,25 @@
     }
   };
 
+  WD.showStats = function(player) {
+    var $el, template;
+
+    $el = $("<div class='stats'>").appendTo('body');
+    template = _.template("<div class=\"stat-color stat-r\"> </div>\n<div class=\"stat-color stat-g\"> </div>\n<div class=\"stat-color stat-b\"> </div>");
+    return player.fb.child('stats').on('value', function(snapshot) {
+      var data;
+
+      data = snapshot.val();
+      $el.html(template(data));
+      return _.each(['r', 'g', 'b'], function(k) {
+        return $el.find(".stat-" + k).css({
+          'margin-top': WD.MAX_BUCKET - data[k],
+          'height': data[k]
+        });
+      });
+    });
+  };
+
 }).call(this);
 
 (function() {
@@ -3077,6 +3098,8 @@
   WD.ROOM_PADDING = (WD.GRID_SIZE - WD.ROOM_SIZE) / 2;
 
   WD.DOOR_SIZE = WD.GRID_SIZE - 40;
+
+  WD.MAX_BUCKET = 300;
 
   WD.run = function(selector) {
     return (new WD.GameController($(selector))).run();

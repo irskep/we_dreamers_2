@@ -181,6 +181,8 @@ class WD.GameController
       property.onValue (v) =>
         @moveWorldContainer(k, -v)
 
+    WD.showStats(player)
+
   moveWorldContainer: (k, v) =>
     @$worldContainer.css({x: 'left', y: 'top'}[k], v)
 
@@ -231,4 +233,4 @@ class WD.GameController
     room.fb.child('lastHarvested').set(WD.time())
     _.each ['r', 'g', 'b'], (k) =>
       @player.fb.child('stats').child(k).set(
-        @player.stats[k] + room.color[k] * strength)
+        Math.min(@player.stats[k] + room.color[k] * strength, WD.MAX_BUCKET))
