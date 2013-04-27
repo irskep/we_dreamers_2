@@ -47,8 +47,10 @@ class WD.Player
     @stopMoving = stopMoving
     @updateStreams = updateStreams
 
+    @isStillBus = new Bacon.Bus()
+    @isStill = @isStillBus.toProperty(true)
+
   teleportToPositionData: ->
-    console.log 'pd:', @positionData
     @$el.css
       left: @positionData.x
       top: @positionData.y
@@ -58,3 +60,6 @@ class WD.Player
     @updateStreams
       x: Bacon.constant(room.gridPoint.x * WD.GRID_SIZE + WD.GRID_SIZE / 2)
       y: Bacon.constant(room.gridPoint.y * WD.GRID_SIZE + WD.GRID_SIZE / 2)
+
+  walkToRoom: (room) ->
+    console.log 'you want to walk to', room

@@ -1,30 +1,5 @@
 window.WD = window.WD or {}
 
-WD.GRID_SIZE = 128
-WD.ROOM_SIZE = 110
-WD.ROOM_PADDING = (WD.GRID_SIZE - WD.ROOM_SIZE) / 2
-WD.DOOR_SIZE = WD.GRID_SIZE - 40
-
-WD.run = (selector) -> (new WD.GameController($(selector))).run()
-
-WD.chunkForPoint = ({x, y}) ->
-    "[#{Math.floor(x / 100)}, #{Math.floor(y / 100)}]"
-
-WD.subtractiveColor = (r, g, b, fraction = 1) ->
-    r *= fraction
-    g *= fraction
-    b *= fraction
-    floor = 255 - Math.max(r, g, b)
-    "rgb(#{floor + r}, #{floor + g}, #{floor + b})"
-
-WD.cssGradientVertical = ($el, a, b) ->
-    $el.css('background',
-      "-webkit-gradient(linear, left top, left bottom, from(#{a}), to(#{b}))")
-
-WD.cssGradientHorizontal = ($el, a, b) ->
-    $el.css('background',
-      "-webkit-gradient(linear, left top, right top, from(#{a}), to(#{b}))")
-
 class WD.GameController
 
   constructor: (@$el) ->
@@ -64,13 +39,43 @@ class WD.GameController
     @addDoor new WD.Door(r1, r2, 'basic', @rooms)
     @addDoor new WD.Door(r1, r3, 'basic', @rooms)
     @player = new WD.Player("Steve", r1)
+    @interactify(@player)
     @$interactiveContainer.append(@player.$el)
+
+  interactify: (player) ->
+    @$worldContainer.asEventStream('click', '.wd-room').onValue (e) =>
+      gridPoint = V2($(e.target).data('gridX'), $(e.target).data('gridY'))
+      @clickRoom(@rooms[gridPoint.toString()])
+
+    keyboardToDirection = (keyName, vector) =>
+      player.isStill.sampledBy(WD.keyboard.isDown(keyName).filter(_.identity))
+        .filter(_.identity)
+        .onValue =>
+          nextRoom = @adjacentRoom(player.currentRoom, vector)
+          player.walkToRoom(nextRoom) if nextRoom
+    keyboardToDirection('left', V2(-1, 0))
+    keyboardToDirection('right', V2(1, 0))
+    keyboardToDirection('up', V2(0, -1))
+    keyboardToDirection('down', V2(0, 1))
+
+  adjacentRoom: (room, dGridPoint) ->
+    p2 = _.clone room.gridPoint
+    k = p2.add(dGridPoint).toString()
+    if k of @rooms then @rooms[k] else null
+
+  clickRoom: (room) ->
+    console.log 'you clicked', room
 
 class WD.Room
 
   constructor: (@gridPoint, @amtRed, @amtGreen, @amtBlue, @fullness) ->
     @color = WD.subtractiveColor(@amtRed, @amtGreen, @amtBlue, @fullness / 100)
-    @$el = $('<div class="wd-room rounded-rect"></div>').css
+    @$el = $("
+        <div class='wd-room rounded-rect'
+          data-grid-x='#{@gridPoint.x}'
+          data-grid-y='#{@gridPoint.y}'
+        ></div>
+      ".trim()).css
       width: WD.ROOM_SIZE
       height: WD.ROOM_SIZE
       left: @gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING
