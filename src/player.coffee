@@ -32,6 +32,8 @@ class WD.Player
     @gridPosition = V2(0, 0)
 
     @$el = $("<div class='wd-player' data-name='#{@name}'></div>")
+      .css('background-color',
+        "rgb(#{_.random(50, 255)}, #{_.random(50, 255)}, #{_.random(50, 255)})")
 
     @initBaconJunk()
     @teleportToRoom(@currentRoom) if @currentRoom

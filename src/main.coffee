@@ -1,5 +1,7 @@
 window.WD = window.WD or {}
 
+window.fb = (new Firebase('https://we-dreamers.firebaseio.com/LD26'))
+
 class WD.Clock
 
   constructor: ->
@@ -42,25 +44,39 @@ class WD.GameController
     @doors[door.hash2()].push(door)
     @$worldContainer.append(door.$el)
 
+  initTestData: =>
+    @r1 = new WD.Room(V2(0, 0), 50, 0, 0, 100)
+    @r2 = new WD.Room(V2(1, 0), 30, 20, 0, 100)
+    @r3 = new WD.Room(V2(0, 1), 0, 0, 30, 100)
+    @r4 = new WD.Room(V2(0, -1), 0, 30, 30, 100)
+    @r5 = new WD.Room(V2(-1, 0), 0, 30, 0, 100)
+    @addRoom(@r1)
+    @addRoom(@r2)
+    @addRoom(@r3)
+    @addRoom(@r4)
+    @addRoom(@r5)
+    @addDoor new WD.Door(@r1, @r2, 'basic', @rooms)
+    @addDoor new WD.Door(@r1, @r3, 'basic', @rooms)
+    @addDoor new WD.Door(@r1, @r4, 'basic', @rooms)
+    @addDoor new WD.Door(@r1, @r5, 'basic', @rooms)
+
+  ensureName: (callback) ->
+    console.log localStorage.getItem('username')
+    if localStorage.getItem('username')
+      @username = localStorage.getItem('username')
+      callback()
+    else
+      WD.showUsernamePrompt (name) =>
+        localStorage.setItem('username', name)
+        @ensureName(callback)
+
   run: ->
-    @clock = new WD.Clock()
-    r1 = new WD.Room(V2(0, 0), 50, 0, 0, 100)
-    r2 = new WD.Room(V2(1, 0), 30, 20, 0, 100)
-    r3 = new WD.Room(V2(0, 1), 0, 0, 30, 100)
-    r4 = new WD.Room(V2(0, -1), 0, 30, 30, 100)
-    r5 = new WD.Room(V2(-1, 0), 0, 30, 0, 100)
-    @addRoom(r1)
-    @addRoom(r2)
-    @addRoom(r3)
-    @addRoom(r4)
-    @addRoom(r5)
-    @addDoor new WD.Door(r1, r2, 'basic', @rooms)
-    @addDoor new WD.Door(r1, r3, 'basic', @rooms)
-    @addDoor new WD.Door(r1, r4, 'basic', @rooms)
-    @addDoor new WD.Door(r1, r5, 'basic', @rooms)
-    @player = new WD.Player(@clock, "Steve", r1)
-    @interactify(@player)
-    @$interactiveContainer.append(@player.$el)
+    @ensureName =>
+      @clock = new WD.Clock()
+      @initTestData()
+      @player = new WD.Player(@clock, "Steve", @r1)
+      @interactify(@player)
+      @$interactiveContainer.append(@player.$el)
 
   interactify: (player) ->
     @$worldContainer.asEventStream('click', '.wd-room').onValue (e) =>
