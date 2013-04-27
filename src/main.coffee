@@ -68,8 +68,7 @@ class WD.GameController
       @clickRoom(@rooms[gridPoint.toString()])
 
     keyboardToDirection = (keyName, vector) =>
-      player.isStill.sampledBy(WD.keyboard.isDown(keyName).filter(_.identity))
-        .filter(_.identity)
+      @clock.tick.filter(player.isStill).filter(WD.keyboard.isDown(keyName))
         .onValue =>
           nextRoom = @adjacentRoom(player.currentRoom, vector)
           player.walkToRoom(nextRoom) if nextRoom

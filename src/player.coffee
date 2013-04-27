@@ -11,10 +11,9 @@ lerp = (startValue, endValue, duration, dt) ->
   val
 
 
-lerpStreams = (clock, startPoint, endPoint, speed) ->
+lerpStreams = (clock, startPoint, endPoint, duration) ->
   startTime = clock.now()
   distance = endPoint.subtract(startPoint).length()
-  duration = 1000 * distance / speed
   tickStreamToTween = (val1, val2) ->
     clock.tick.map (currentTime) ->
       lerp(val1, val2, duration, currentTime - startTime)
@@ -89,8 +88,7 @@ class WD.Player
   walkToRoom: (room) ->
     @startMoving()
     streams = lerpStreams(
-      @clock, V2(@positionData.x, @positionData.y), room.center(),
-      WD.GRID_SIZE * 2)
+      @clock, V2(@positionData.x, @positionData.y), room.center(), 500)
     @currentRoom = room
     streams.reachedDest.onValue =>
       @stopMoving()
