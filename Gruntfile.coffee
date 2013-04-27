@@ -3,7 +3,7 @@ module.exports = (grunt) ->
     coffee:
       main:
         options:
-          sourceMaps: true
+          sourceMap: true
         files:
           'we_dreamers.js': 'src/*.coffee',
 
