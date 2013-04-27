@@ -57,3 +57,8 @@ WD.keyboard =
     WD.keyboard.downs(key).map(true).merge(WD.keyboard.ups(key).map(false))
       .merge($('window').asEventStream('focus').map(false))
       .toProperty(false)
+
+
+WD.time = do ->
+  t = 1000000
+  -> t

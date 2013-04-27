@@ -2472,7 +2472,7 @@
               g: 0,
               b: 0
             },
-            health: 100
+            lastHarvested: 0
           });
           fbRooms.child(top.toString()).set({
             position: top,
@@ -2481,7 +2481,7 @@
               g: 30,
               b: 0
             },
-            health: 100
+            lastHarvested: 0
           });
           fbRooms.child(bottom.toString()).set({
             position: bottom,
@@ -2490,7 +2490,7 @@
               g: 0,
               b: 30
             },
-            health: 100
+            lastHarvested: 0
           });
           fbRooms.child(left.toString()).set({
             position: left,
@@ -2499,7 +2499,7 @@
               g: 30,
               b: 30
             },
-            health: 100
+            lastHarvested: 0
           });
           fbRooms.child(right.toString()).set({
             position: right,
@@ -2508,7 +2508,7 @@
               g: 30,
               b: 0
             },
-            health: 100
+            lastHarvested: 0
           });
           return _.each([[center, right], [left, center], [top, center], [center, bottom]], function(_arg) {
             var a, b;
@@ -2583,7 +2583,7 @@
         var data;
 
         data = snapshot.val();
-        _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.health, _this));
+        _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.lastHarvested, _this));
         stillLoadingRooms = true;
         return anyRoomsLoaded = true;
       };
@@ -2591,7 +2591,7 @@
         var data;
 
         data = snapshot.val();
-        _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.health, _this));
+        _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.lastHarvested, _this));
         stillLoadingRooms = true;
         return anyRoomsLoaded = true;
       });
@@ -2697,7 +2697,7 @@
         fbRooms.child(newPoint.toString()).set({
           position: newPoint,
           color: WD.mutateColor(room.color),
-          health: 100
+          lastHarvested: 0
         });
       }
       if (dGridPoint.x + dGridPoint.y > 1) {
@@ -3122,18 +3122,38 @@
     })
   };
 
+  WD.time = (function() {
+    var t;
+
+    t = 1000000;
+    return function() {
+      return t;
+    };
+  })();
+
 }).call(this);
 
 (function() {
+  var GROW_TIME, growiness;
+
   window.WD = window.WD || {};
 
+  GROW_TIME = 1000 * 60 * 5;
+
+  growiness = function(t) {
+    if (t == null) {
+      t = 0;
+    }
+    return Math.min((WD.time() - t) / GROW_TIME, 1);
+  };
+
   WD.Room = (function() {
-    function Room(gridPoint, color, health, gameController) {
+    function Room(gridPoint, color, lastHarvested, gameController) {
       var _this = this;
 
       this.gridPoint = gridPoint;
       this.color = color;
-      this.health = health;
+      this.lastHarvested = lastHarvested;
       this.gameController = gameController;
       this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        ></div>      ").trim()).css({
         width: WD.ROOM_SIZE,
@@ -3150,11 +3170,15 @@
       this.fb.child('color').on('value', function(snapshot) {
         return _this.updateColor(snapshot.val());
       });
+      this.fb.child('lastHarvested').on('value', function(snapshot) {
+        _this.lastHarvested = snapshot.val();
+        return _this.updateColor(_this.color);
+      });
     }
 
     Room.prototype.updateColor = function(color) {
       this.color = color;
-      this.cssColor = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.health / 100);
+      this.cssColor = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, growiness(this.lastHarvested));
       return this.$el.css('background-color', this.cssColor);
     };
 
@@ -3187,13 +3211,13 @@
         r: 0,
         g: 0,
         b: 0,
-        health: 100
+        strength: 100
       };
       this.color2 = {
         r: 0,
         g: 0,
         b: 0,
-        health: 100
+        strength: 100
       };
       if (this.gridPoint1.x === this.gridPoint2.x) {
         this.initVertical();
@@ -3208,7 +3232,7 @@
 
         data = snapshot.val();
         _this.color1 = data.color;
-        _this.color1.health = data.health;
+        _this.color1.strength = growiness(data.lastHarvested);
         return _this.updateColors();
       });
       this.fbRoom2.on('value', function(snapshot) {
@@ -3216,7 +3240,7 @@
 
         data = snapshot.val();
         _this.color2 = data.color;
-        _this.color2.health = data.health;
+        _this.color2.strength = growiness(data.lastHarvested);
         return _this.updateColors();
       });
     }
@@ -3261,10 +3285,10 @@
       var c;
 
       c = function(_arg) {
-        var b, g, health, r;
+        var b, g, r, strength;
 
-        r = _arg.r, g = _arg.g, b = _arg.b, health = _arg.health;
-        return WD.subtractiveColor(r, g, b, health / 100);
+        r = _arg.r, g = _arg.g, b = _arg.b, strength = _arg.strength;
+        return WD.subtractiveColor(r, g, b, strength);
       };
       if (this.direction === 'vertical') {
         return WD.cssGradientVertical(this.$el, c(this.color1), c(this.color2));

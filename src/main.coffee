@@ -60,15 +60,15 @@ class WD.GameController
       unless snapshot.val()
         console.log 'initializing rooms'
         fbRoomZero.set(
-          {position: center, color: {r: 30, g: 0, b: 0}, health: 100})
+          {position: center, color: {r: 30, g: 0, b: 0}, lastHarvested: 0})
         fbRooms.child(top.toString()).set(
-          {position: top, color: {r: 30, g: 30, b: 0}, health: 100})
+          {position: top, color: {r: 30, g: 30, b: 0}, lastHarvested: 0})
         fbRooms.child(bottom.toString()).set(
-          {position: bottom, color: {r: 0, g: 0, b: 30}, health: 100})
+          {position: bottom, color: {r: 0, g: 0, b: 30}, lastHarvested: 0})
         fbRooms.child(left.toString()).set(
-          {position: left, color: {r: 0, g: 30, b: 30}, health: 100})
+          {position: left, color: {r: 0, g: 30, b: 30}, lastHarvested: 0})
         fbRooms.child(right.toString()).set(
-          {position: right, color: {r: 0, g: 30, b: 0}, health: 100})
+          {position: right, color: {r: 0, g: 30, b: 0}, lastHarvested: 0})
 
         _.each [
           [center, right], [left, center], [top, center], [center, bottom]
@@ -119,14 +119,14 @@ class WD.GameController
     loadRoom = (snapshot) =>
       data = snapshot.val()
       @addRoom new WD.Room(
-        V2(data.position.x, data.position.y), data.color, data.health, this)
+        V2(data.position.x, data.position.y), data.color, data.lastHarvested, this)
       stillLoadingRooms = true
       anyRoomsLoaded = true
 
     fb.child('chunks/(0, 0)/rooms').on 'child_added', (snapshot) =>
       data = snapshot.val()
       @addRoom new WD.Room(
-        V2(data.position.x, data.position.y), data.color, data.health, this)
+        V2(data.position.x, data.position.y), data.color, data.lastHarvested, this)
       stillLoadingRooms = true
       anyRoomsLoaded = true
 
@@ -203,7 +203,7 @@ class WD.GameController
     newPoint = room.gridPoint.add(dGridPoint)
     unless newPoint.toString() of @rooms
       fbRooms.child(newPoint.toString()).set(
-        {position: newPoint, color: WD.mutateColor(room.color), health: 100})
+        {position: newPoint, color: WD.mutateColor(room.color), lastHarvested: 0})
 
     if dGridPoint.x + dGridPoint.y > 1
       fbDoors.child(room.hash() + newPoint.toString()).set

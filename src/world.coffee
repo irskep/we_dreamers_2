@@ -1,8 +1,11 @@
 window.WD = window.WD or {}
 
+GROW_TIME = 1000 * 60 * 5
+growiness = (t = 0) -> Math.min((WD.time() - t) / GROW_TIME, 1)
+
 class WD.Room
 
-  constructor: (@gridPoint, @color, @health, @gameController) ->
+  constructor: (@gridPoint, @color, @lastHarvested, @gameController) ->
     @$el = $("
         <div class='wd-room rounded-rect'
           data-grid-x='#{@gridPoint.x}'
@@ -23,9 +26,14 @@ class WD.Room
     @fb.child('color').on 'value', (snapshot) =>
       @updateColor(snapshot.val())
 
+    @fb.child('lastHarvested').on 'value', (snapshot) =>
+      @lastHarvested = snapshot.val()
+      @updateColor(@color)
+
   updateColor: (color) ->
     @color = color
-    @cssColor = WD.subtractiveColor(@color.r, @color.g, @color.b, @health / 100)
+    @cssColor = WD.subtractiveColor(
+      @color.r, @color.g, @color.b, growiness(@lastHarvested))
     @$el.css('background-color', @cssColor)
 
   center: ->
@@ -41,8 +49,8 @@ class WD.Door
       tmp = @gridPoint1
       @gridPoint1 = @gridPoint2
       @gridPoint2 = tmp
-    @color1 = {r: 0, g: 0, b: 0, health: 100}
-    @color2 = {r: 0, g: 0, b: 0, health: 100}
+    @color1 = {r: 0, g: 0, b: 0, strength: 100}
+    @color2 = {r: 0, g: 0, b: 0, strength: 100}
     if @gridPoint1.x == @gridPoint2.x then @initVertical() else @initHorizontal()
 
     @fb = fb.child('chunks/(0, 0)/doors')
@@ -54,13 +62,13 @@ class WD.Door
     @fbRoom1.on 'value', (snapshot) =>
       data = snapshot.val()
       @color1 = data.color
-      @color1.health = data.health
+      @color1.strength = growiness(data.lastHarvested)
       @updateColors()
 
     @fbRoom2.on 'value', (snapshot) =>
       data = snapshot.val()
       @color2 = data.color
-      @color2.health = data.health
+      @color2.strength = growiness(data.lastHarvested)
       @updateColors()
 
   hash1: -> @gridPoint1.toString()
@@ -85,7 +93,7 @@ class WD.Door
       top: WD.GRID_SIZE * @gridPoint1.y + 20
 
   updateColors: ->
-    c = ({r, g, b, health}) -> WD.subtractiveColor(r, g, b, health / 100)
+    c = ({r, g, b, strength}) -> WD.subtractiveColor(r, g, b, strength)
     if @direction == 'vertical'
       WD.cssGradientVertical(@$el, c(@color1), c(@color2))
     else
