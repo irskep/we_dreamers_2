@@ -4,7 +4,6 @@ class WD.Room
 
   constructor: (@gridPoint, @color, @health, @gameController) ->
     @cssColor = WD.subtractiveColor(@color.r, @color.g, @color.b, @health / 100)
-    console.log 'mutate', @color, 'into', WD.mutateColor(@color)
     @$el = $("
         <div class='wd-room rounded-rect'
           data-grid-x='#{@gridPoint.x}'

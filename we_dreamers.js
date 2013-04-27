@@ -3072,22 +3072,24 @@
   };
 
   WD.mutateColor = function(c) {
-    var pivot1, pivot2, strength, tmp;
+    var newColor, strength;
 
-    strength = c.r + c.g + c.b;
-    strength = _.random(Math.max(strength - 10, 30), Math.min(strength + 10, 100));
-    pivot1 = Math.random();
-    pivot2 = Math.random();
-    if (pivot1 > pivot2) {
-      tmp = pivot1;
-      pivot1 = pivot2;
-      pivot2 = tmp;
-    }
-    return {
-      r: Math.floor(pivot1 * strength),
-      g: Math.floor((pivot2 - pivot1) * strength),
-      b: Math.floor((1 - pivot2) * strength)
+    newColor = {
+      r: c.r + _.random(-20, 20),
+      g: c.g + _.random(-20, 20),
+      b: c.b + _.random(-20, 20)
     };
+    newColor.r = Math.floor(Math.min(Math.max(newColor.r, 0), 50));
+    newColor.g = Math.floor(Math.min(Math.max(newColor.g, 0), 50));
+    newColor.b = Math.floor(Math.min(Math.max(newColor.b, 0), 50));
+    strength = newColor.r + newColor.g + newColor.b;
+    if (strength < 30) {
+      return WD.mutateColor(c);
+    }
+    if (strength > 100) {
+      return WD.mutateColor(c);
+    }
+    return newColor;
   };
 
   WD.cssGradientVertical = function($el, a, b) {
@@ -3134,7 +3136,6 @@
       this.health = health;
       this.gameController = gameController;
       this.cssColor = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.health / 100);
-      console.log('mutate', this.color, 'into', WD.mutateColor(this.color));
       this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        ></div>      ").trim()).css({
         width: WD.ROOM_SIZE,
         height: WD.ROOM_SIZE,
