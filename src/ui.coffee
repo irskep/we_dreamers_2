@@ -21,32 +21,39 @@ _showUsernamePrompt = (callback, isRepeat = false) ->
     false
 
 
-WD.ensureUsername = (callback, isRepeat = false) ->
+WD.ensureUser = (callback, isRepeat = false) ->
+  fbUsers = fb.child('users')
   if localStorage.getItem('username')
-    fb.child(localStorage.getItem('username')).once 'value', (snapshot) ->
-      unless snapshot.val()
-        color = 
-          r: _.random(50, 255)
-          g: _.random(50, 255)
-          b: _.random(50, 255)
-        fb.child(username).set
+    username = localStorage.getItem('username')
+    fbUsers.child(username).once 'value', (snapshot) ->
+      data = snapshot.val()
+      unless data
+        data = 
           username: username
-          color: color
-      callback(localStorage.getItem('username'))
-  else
-    f = (username) =>
-      fb.child(username).once 'value', (snapshot) ->
-        if snapshot.val()
-          WD.ensureUsername(callback, true)
-        else
-          # win!
-          color = 
+          color:
             r: _.random(50, 255)
             g: _.random(50, 255)
             b: _.random(50, 255)
-          fb.child(username).set
+          x: 0
+          y: 0
+        fbUsers.child(username).set(data)
+      callback(data)
+  else
+    f = (username) =>
+      fbUsers.child(username).once 'value', (snapshot) ->
+        if snapshot.val()
+          WD.ensureUser(callback, true)
+        else
+          # win!
+          data =
             username: username
-            color: color
+            color:
+              r: _.random(50, 255)
+              g: _.random(50, 255)
+              b: _.random(50, 255)
+            x: 0
+            y: 0
+          fbUsers.child(username).set(data)
           localStorage.setItem('username', username)
-          callback(username)
+          callback(data)
     _showUsernamePrompt(f, isRepeat)

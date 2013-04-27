@@ -61,11 +61,12 @@ class WD.GameController
     @addDoor new WD.Door(@r1, @r5, 'basic', @rooms)
 
   run: ->
-    WD.ensureUsername (username) =>
+    WD.ensureUser ({username, x, y, color}) =>
       @username = username
       @clock = new WD.Clock()
       @initTestData()
-      @player = new WD.Player(@clock, "Steve", @rooms["{0, 0}"])
+      @player = new WD.Player(
+        @clock, "Steve", @rooms[V2(x, y).toString()], color)
       @interactify(@player)
       @$interactiveContainer.append(@player.$el)
 

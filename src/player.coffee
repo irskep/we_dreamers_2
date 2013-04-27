@@ -28,15 +28,15 @@ lerpStreams = (clock, startPoint, endPoint, duration) ->
 
 class WD.Player
 
-  constructor: (@clock, @name, @currentRoom = null) ->
+  constructor: (@clock, @name, @currentRoom, @color) ->
     @gridPosition = V2(0, 0)
 
     @$el = $("<div class='wd-player' data-name='#{@name}'></div>")
       .css('background-color',
-        "rgb(#{_.random(50, 255)}, #{_.random(50, 255)}, #{_.random(50, 255)})")
+        "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
 
     @initBaconJunk()
-    @teleportToRoom(@currentRoom) if @currentRoom
+    @teleportToRoom(@currentRoom)
 
   initBaconJunk: ->
     @positionData = {x: 0, y: 0}
