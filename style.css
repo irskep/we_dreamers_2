@@ -16,8 +16,14 @@
 
 .wd-room {
   position: absolute;
+  z-index: 2;
 }
 
 .wd-room.rounded-rect {
   border-radius: 10px;
+}
+
+.wd-door {
+  position: absolute;
+  z-index: 3;
 }
