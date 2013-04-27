@@ -60,21 +60,12 @@ class WD.GameController
     @addDoor new WD.Door(@r1, @r4, 'basic', @rooms)
     @addDoor new WD.Door(@r1, @r5, 'basic', @rooms)
 
-  ensureName: (callback) ->
-    console.log localStorage.getItem('username')
-    if localStorage.getItem('username')
-      @username = localStorage.getItem('username')
-      callback()
-    else
-      WD.showUsernamePrompt (name) =>
-        localStorage.setItem('username', name)
-        @ensureName(callback)
-
   run: ->
-    @ensureName =>
+    WD.ensureUsername (username) =>
+      @username = username
       @clock = new WD.Clock()
       @initTestData()
-      @player = new WD.Player(@clock, "Steve", @r1)
+      @player = new WD.Player(@clock, "Steve", @rooms["{0, 0}"])
       @interactify(@player)
       @$interactiveContainer.append(@player.$el)
 
