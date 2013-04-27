@@ -50,9 +50,12 @@ class WD.GameController
   run: ->
     r1 = new WD.Room(V2(0, 0), 50, 0, 0)
     r2 = new WD.Room(V2(1, 0), 30, 20, 0)
+    r3 = new WD.Room(V2(0, 1), 0, 0, 30)
     @addRoom(r1)
     @addRoom(r2)
+    @addRoom(r3)
     @addDoor new WD.Door(r1, r2, 'basic', @rooms)
+    @addDoor new WD.Door(r1, r3, 'basic', @rooms)
     console.log @doors
 
 class WD.Room
@@ -81,9 +84,16 @@ class WD.Door
   hash1: -> @gridPoint1.toString()
   hash2: -> @gridPoint2.toString()
 
-  initVertical: ->
+  initVertical: (color1, color2) ->
+    bigY = Math.max(@gridPoint1.y, @gridPoint2.y)
+    @$el = $("<div class='wd-door #{@type}'></div>").css
+      width: GRID_SIZE - 40
+      height: ROOM_PADDING * 2
+      left: GRID_SIZE * @gridPoint1.x + 20
+      top: bigY * GRID_SIZE - ROOM_PADDING
+    WD.cssGradientVertical(@$el, color1, color2)
+
   initHorizontal: (color1, color2) ->
-    console.log 'init horz'
     bigX = Math.max(@gridPoint1.x, @gridPoint2.x)
     @$el = $("<div class='wd-door #{@type}'></div>").css
       width: ROOM_PADDING * 2
