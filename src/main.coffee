@@ -1,1 +1,2 @@
-console.log 'hello, my sweet'
+window.WD =
+  run: (selector) -> console.log $(selector)
