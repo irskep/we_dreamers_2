@@ -2414,14 +2414,15 @@
   WD.GameController = (function() {
     function GameController($el) {
       this.$el = $el;
+      this.moveWorldContainer = __bind(this.moveWorldContainer, this);
       this.initBaseData = __bind(this.initBaseData, this);
       this.$el.append($('<div class="wd-inner"></div>'));
       this.$worldContainer = $('<div class="room-container"></div>').appendTo(this.$el.find('.wd-inner')).css({
         position: 'absolute',
-        overflow: 'visible',
-        left: -WD.GRID_SIZE / 2,
-        top: -WD.GRID_SIZE / 2
+        overflow: 'visible'
       });
+      this.moveWorldContainer('x', -WD.GRID_SIZE / 2);
+      this.moveWorldContainer('y', -WD.GRID_SIZE / 2);
       this.$interactiveContainer = $('<div class="wd-interactive"></div>').appendTo(this.$worldContainer);
       this.viewOffset = V2(0, 0);
       this.rooms = {};
@@ -2643,7 +2644,19 @@
       keyboardToDirection('a', V2(-1, 0));
       keyboardToDirection('d', V2(1, 0));
       keyboardToDirection('w', V2(0, -1));
-      return keyboardToDirection('s', V2(0, 1));
+      keyboardToDirection('s', V2(0, 1));
+      return _.each(player.positionProperties, function(property, k) {
+        return property.onValue(function(v) {
+          return _this.moveWorldContainer(k, -v);
+        });
+      });
+    };
+
+    GameController.prototype.moveWorldContainer = function(k, v) {
+      return this.$worldContainer.css({
+        x: 'left',
+        y: 'top'
+      }[k], v);
     };
 
     GameController.prototype.clickRoom = function(room) {
@@ -2681,14 +2694,11 @@
       fbDoors = fbChunkZero.child('doors');
       newPoint = room.gridPoint.add(dGridPoint);
       if (!(newPoint.toString() in this.rooms)) {
-        console.log('making a new room at', newPoint);
         fbRooms.child(newPoint.toString()).set({
           position: newPoint,
           color: room.color,
           health: 100
         });
-      } else {
-        console.log(newPoint.toString(), _.keys(this.rooms));
       }
       if (dGridPoint.x + dGridPoint.y > 1) {
         return fbDoors.child(room.hash() + newPoint.toString()).set({
@@ -2834,7 +2844,8 @@
       this.stopMoving = function() {
         return isStillBus.push(true);
       };
-      return this.isStill = isStillBus.toProperty(true);
+      this.isStill = isStillBus.toProperty(true);
+      return this.positionProperties = properties;
     };
 
     Player.prototype.bindFirebase = function() {

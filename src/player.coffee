@@ -93,6 +93,7 @@ class WD.Player
     @startMoving = -> isStillBus.push(false)
     @stopMoving = -> isStillBus.push(true)
     @isStill = isStillBus.toProperty(true)
+    @positionProperties = properties
 
   bindFirebase: ->
     @fb.child('color').on 'value', (snapshot) =>

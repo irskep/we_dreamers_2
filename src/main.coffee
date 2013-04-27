@@ -24,8 +24,10 @@ class WD.GameController
       .css
         position: 'absolute'
         overflow: 'visible'
-        left: - WD.GRID_SIZE / 2
-        top: - WD.GRID_SIZE / 2
+
+    @moveWorldContainer('x', - WD.GRID_SIZE / 2)
+    @moveWorldContainer('y', - WD.GRID_SIZE / 2)
+
     @$interactiveContainer = $('<div class="wd-interactive"></div>')
       .appendTo(@$worldContainer)
     @viewOffset = V2(0, 0)
@@ -166,6 +168,13 @@ class WD.GameController
     keyboardToDirection('w', V2(0, -1))
     keyboardToDirection('s', V2(0, 1))
 
+    _.each player.positionProperties, (property, k) =>
+      property.onValue (v) =>
+        @moveWorldContainer(k, -v)
+
+  moveWorldContainer: (k, v) =>
+    @$worldContainer.css({x: 'left', y: 'top'}[k], v)
+
   clickRoom: (room) ->
     console.log 'you clicked', room
 
@@ -193,11 +202,8 @@ class WD.GameController
 
     newPoint = room.gridPoint.add(dGridPoint)
     unless newPoint.toString() of @rooms
-      console.log 'making a new room at', newPoint
       fbRooms.child(newPoint.toString()).set(
         {position: newPoint, color: room.color, health: 100})
-    else
-      console.log newPoint.toString(), _.keys(@rooms)
 
     if dGridPoint.x + dGridPoint.y > 1
       fbDoors.child(room.hash() + newPoint.toString()).set
