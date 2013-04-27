@@ -2918,7 +2918,6 @@
   };
 
   WD.cssGradientVertical = function($el, a, b) {
-    console.log(a, b);
     return $el.css('background', "-webkit-gradient(linear, left top, left bottom, from(" + a + "), to(" + b + "))");
   };
 

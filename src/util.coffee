@@ -20,7 +20,6 @@ WD.subtractiveColor = (r, g, b, fraction = 1) ->
     "rgb(#{floor + r}, #{floor + g}, #{floor + b})"
 
 WD.cssGradientVertical = ($el, a, b) ->
-  console.log a, b
   $el.css('background',
     "-webkit-gradient(linear, left top, left bottom, from(#{a}), to(#{b}))")
 
