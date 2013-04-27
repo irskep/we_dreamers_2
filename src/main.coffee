@@ -61,37 +61,46 @@ class WD.GameController
     @addDoor new WD.Door(@r1, @r5, 'basic', @rooms)
 
   run: ->
-    WD.ensureUser ({username, x, y, color}) =>
+    WD.ensureUser (username) =>
       @username = username
       @clock = new WD.Clock()
       @initTestData()
-      @player = new WD.Player(
-        @clock, "Steve", @rooms[V2(x, y).toString()], color)
+      @player = new WD.Player(@clock, username, this)
       @interactify(@player)
       @$interactiveContainer.append(@player.$el)
 
   interactify: (player) ->
     @$worldContainer.asEventStream('click', '.wd-room').onValue (e) =>
       gridPoint = V2($(e.target).data('gridX'), $(e.target).data('gridY'))
-      @clickRoom(@rooms[gridPoint.toString()])
+      @clickRoom(@roomAtPoint(gridPoint))
 
     keyboardToDirection = (keyName, vector) =>
       @clock.tick.filter(player.isStill).filter(WD.keyboard.isDown(keyName))
         .onValue =>
           nextRoom = @adjacentRoom(player.currentRoom, vector)
+          return unless nextRoom
           player.walkToRoom(nextRoom) if nextRoom
     keyboardToDirection('left', V2(-1, 0))
     keyboardToDirection('right', V2(1, 0))
     keyboardToDirection('up', V2(0, -1))
     keyboardToDirection('down', V2(0, 1))
-
-  adjacentRoom: (room, dGridPoint) ->
-    p2 = _.clone room.gridPoint
-    k = p2.add(dGridPoint).toString()
-    if k of @rooms then @rooms[k] else null
+    keyboardToDirection('a', V2(-1, 0))
+    keyboardToDirection('d', V2(1, 0))
+    keyboardToDirection('w', V2(0, -1))
+    keyboardToDirection('s', V2(0, 1))
 
   clickRoom: (room) ->
     console.log 'you clicked', room
+
+  roomAtPoint: (p) -> @rooms[p.toString()]
+
+  adjacentRoom: (room, dGridPoint) ->
+    p2 = room.gridPoint.add(dGridPoint)
+    return false unless p2.toString() of @rooms
+    return false unless _.find(@doors[room.hash()], (door) ->
+      door.other(room.gridPoint).equals(p2)
+    )
+    return @roomAtPoint(p2)
 
 class WD.Room
 
@@ -131,6 +140,8 @@ class WD.Door
 
   hash1: -> @gridPoint1.toString()
   hash2: -> @gridPoint2.toString()
+  other: (p) ->
+    if p.equals(@gridPoint1) then @gridPoint2 else @gridPoint1
 
   initVertical: (color1, color2) ->
     @$el = $("<div class='wd-door #{@type}'></div>").css

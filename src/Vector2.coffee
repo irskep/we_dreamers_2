@@ -5,7 +5,7 @@ class window.Vector2
   multiply: (c) -> new window.Vector2(@x * c, @y * c)
   subtract: (p2) -> @add(p2.multiply(-1))
   length: -> Math.sqrt(@x * @x + @y * @y)
+  equals: (p2) -> @x == p2.x and @y == p2.y
   toString: -> "{#{@x}, #{@y}}"
-
 
 window.V2 = (args...) -> new Vector2(args...)

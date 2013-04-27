@@ -28,15 +28,28 @@ lerpStreams = (clock, startPoint, endPoint, duration) ->
 
 class WD.Player
 
-  constructor: (@clock, @name, @currentRoom, @color) ->
+  constructor: (@clock, @username, @gameController) ->
     @gridPosition = V2(0, 0)
+    @currentRoom = null
 
     @$el = $("<div class='wd-player' data-name='#{@name}'></div>")
-      .css('background-color',
+
+    @fb = fb.child('users').child(@username)
+
+    @fb.on 'value', (snapshot) =>
+      {color, x, y} = snapshot.val()
+      @color = color
+      @$el.css('background-color',
         "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
+      room = @gameController.roomAtPoint(V2(x, y))
+      if @currentRoom
+        console.log 'walking nicely'
+        @walkToRoom(room)
+      else
+        console.log 'apparently just loading in'
+        @teleportToRoom(room)
 
     @initBaconJunk()
-    @teleportToRoom(@currentRoom)
 
   initBaconJunk: ->
     @positionData = {x: 0, y: 0}

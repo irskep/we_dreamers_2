@@ -37,7 +37,7 @@ WD.ensureUser = (callback, isRepeat = false) ->
           x: 0
           y: 0
         fbUsers.child(username).set(data)
-      callback(data)
+      callback(username)
   else
     f = (username) =>
       fbUsers.child(username).once 'value', (snapshot) ->
@@ -55,5 +55,5 @@ WD.ensureUser = (callback, isRepeat = false) ->
             y: 0
           fbUsers.child(username).set(data)
           localStorage.setItem('username', username)
-          callback(data)
+          callback(username)
     _showUsernamePrompt(f, isRepeat)
