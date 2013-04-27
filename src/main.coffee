@@ -61,6 +61,7 @@ class WD.GameController
     @addDoor new WD.Door(@r1, @r5, 'basic', @rooms)
 
   run: ->
+    @players = {}
     WD.ensureUser (username) =>
       @username = username
       @clock = new WD.Clock()
@@ -68,6 +69,11 @@ class WD.GameController
       @player = new WD.Player(@clock, username, this)
       @interactify(@player)
       @$interactiveContainer.append(@player.$el)
+
+      fb.child('users').on 'child_added', (snapshot) =>
+        data = snapshot.val()
+        @players[data.username] = new WD.Player(@clock, data.username, this)
+        @$interactiveContainer.append(@players[data.username].$el)
 
   interactify: (player) ->
     @$worldContainer.asEventStream('click', '.wd-room').onValue (e) =>

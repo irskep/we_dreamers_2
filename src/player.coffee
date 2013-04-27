@@ -34,16 +34,15 @@ class WD.Player
 
     @$el = $("<div class='wd-player' data-name='#{@name}'></div>")
 
-    @fb = fb.child('users').child(@username)
+    @initBaconJunk()
 
+    @fb = fb.child('users').child(@username)
     @fb.on 'value', (snapshot) =>
       {color, position} = snapshot.val()
       @color = color
       @$el.css('background-color', "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
       room = @gameController.roomAtPoint(V2(position.x, position.y))
       if @currentRoom then @walkToRoom(room) else @teleportToRoom(room)
-
-    @initBaconJunk()
 
   initBaconJunk: ->
     @positionData = {x: 0, y: 0}
