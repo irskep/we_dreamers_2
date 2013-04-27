@@ -9,4 +9,9 @@ class window.Vector2
   isLeftOrAbove: (p2) -> @x < p2.x or @y < p2.y
   toString: -> "{#{@x}, #{@y}}"
 
+window.Vector2.fromString = (s) ->
+  withoutParens = s.substring(1, s.length - 1)
+  items = withoutParens.split(', ')
+  new Vector2(parseInt(items[0], 10), parseInt(items[1]))
+
 window.V2 = (args...) -> new Vector2(args...)

@@ -185,3 +185,27 @@ class WD.GameController
       .child('walls')
       .child(dGridPoint.toString())
       .push(@player.username)
+
+  excavate: (room, dGridPoint) ->
+    fbChunkZero = fb.child('chunks').child(WD.chunkForPoint(V2(0, 0)))
+    fbRooms = fbChunkZero.child('rooms')
+    fbDoors = fbChunkZero.child('doors')
+
+    newPoint = room.gridPoint.add(dGridPoint)
+    unless newPoint.toString() of @rooms
+      console.log 'making a new room at', newPoint
+      fbRooms.child(newPoint.toString()).set(
+        {position: newPoint, color: room.color, health: 100})
+    else
+      console.log newPoint.toString(), _.keys(@rooms)
+
+    if dGridPoint.x + dGridPoint.y > 1
+      fbDoors.child(room.hash() + newPoint.toString()).set
+        room1: room.gridPoint
+        room2: newPoint
+        type: 'basic'
+    else
+      fbDoors.child(newPoint.toString() + room.hash()).set
+        room1: newPoint
+        room2: room.gridPoint
+        type: 'basic'

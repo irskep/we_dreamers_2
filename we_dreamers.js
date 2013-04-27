@@ -2361,6 +2361,14 @@
 
   })();
 
+  window.Vector2.fromString = function(s) {
+    var items, withoutParens;
+
+    withoutParens = s.substring(1, s.length - 1);
+    items = withoutParens.split(', ');
+    return new Vector2(parseInt(items[0], 10), parseInt(items[1]));
+  };
+
   window.V2 = function() {
     var args;
 
@@ -2663,6 +2671,38 @@
 
     GameController.prototype.weaken = function(room, dGridPoint) {
       return fb.child('chunks/(0, 0)/rooms').child(room.hash()).child('walls').child(dGridPoint.toString()).push(this.player.username);
+    };
+
+    GameController.prototype.excavate = function(room, dGridPoint) {
+      var fbChunkZero, fbDoors, fbRooms, newPoint;
+
+      fbChunkZero = fb.child('chunks').child(WD.chunkForPoint(V2(0, 0)));
+      fbRooms = fbChunkZero.child('rooms');
+      fbDoors = fbChunkZero.child('doors');
+      newPoint = room.gridPoint.add(dGridPoint);
+      if (!(newPoint.toString() in this.rooms)) {
+        console.log('making a new room at', newPoint);
+        fbRooms.child(newPoint.toString()).set({
+          position: newPoint,
+          color: room.color,
+          health: 100
+        });
+      } else {
+        console.log(newPoint.toString(), _.keys(this.rooms));
+      }
+      if (dGridPoint.x + dGridPoint.y > 1) {
+        return fbDoors.child(room.hash() + newPoint.toString()).set({
+          room1: room.gridPoint,
+          room2: newPoint,
+          type: 'basic'
+        });
+      } else {
+        return fbDoors.child(newPoint.toString() + room.hash()).set({
+          room1: newPoint,
+          room2: room.gridPoint,
+          type: 'basic'
+        });
+      }
     };
 
     return GameController;
@@ -3063,17 +3103,19 @@
       this.color = color;
       this.health = health;
       this.gameController = gameController;
-      this.color = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.health / 100);
+      this.cssColor = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.health / 100);
       this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        ></div>      ").trim()).css({
         width: WD.ROOM_SIZE,
         height: WD.ROOM_SIZE,
         left: this.gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING,
         top: this.gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING,
-        'background-color': this.color
+        'background-color': this.cssColor
       });
       this.fb = fb.child('chunks/(0, 0)/rooms').child(this.hash());
       this.fb.child('walls').on('child_changed', function(snapshot) {
-        return console.log(snapshot.name(), _.keys(snapshot.val()).length);
+        if (_.keys(snapshot.val()).length > 9) {
+          return _this.gameController.excavate(_this, Vector2.fromString(snapshot.name()));
+        }
       });
     }
 
