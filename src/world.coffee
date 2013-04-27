@@ -25,7 +25,7 @@ class WD.Room
 class WD.Door
 
   constructor: (args...) ->
-    console.log args
+    # wat.
     [@gridPoint1, @gridPoint2, @type] = args
     if @gridPoint2.isLeftOrAbove(@gridPoint1)
       tmp = @gridPoint1

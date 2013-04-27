@@ -2521,7 +2521,7 @@
       this.roomsLoaded = new Bacon.Bus();
       this.players = {};
       return WD.ensureUser(function(username) {
-        var $loadingEl, anyRoomsLoaded, checkRoomsLoaded, stillLoadingRooms;
+        var $loadingEl;
 
         $loadingEl = $("<div class='status-message'>Loading...</div>").appendTo(_this.$el);
         _this.username = username;
@@ -2549,33 +2549,49 @@
           }
           return _this.players[data].remove();
         });
-        anyRoomsLoaded = false;
+        return _this.load($loadingEl);
+      });
+    };
+
+    GameController.prototype.load = function($loadingEl) {
+      var anyRoomsLoaded, checkRoomsLoaded, loadRoom, stillLoadingRooms,
+        _this = this;
+
+      anyRoomsLoaded = false;
+      stillLoadingRooms = false;
+      checkRoomsLoaded = function() {
+        if (anyRoomsLoaded && !stillLoadingRooms) {
+          $loadingEl.remove();
+          _this.roomsLoaded.push(true);
+          return;
+        }
         stillLoadingRooms = false;
-        checkRoomsLoaded = function() {
-          if (anyRoomsLoaded && !stillLoadingRooms) {
-            $loadingEl.remove();
-            _this.roomsLoaded.push(true);
-          }
-          stillLoadingRooms = false;
-          return setTimeout(checkRoomsLoaded, 200);
-        };
-        checkRoomsLoaded();
-        fb.child('chunks/(0, 0)/rooms').on('child_added', function(snapshot) {
-          var data;
+        return setTimeout(checkRoomsLoaded, 200);
+      };
+      checkRoomsLoaded();
+      loadRoom = function(snapshot) {
+        var data;
 
-          data = snapshot.val();
-          _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.health));
-          stillLoadingRooms = true;
-          return anyRoomsLoaded = true;
-        });
-        return fb.child('chunks/(0, 0)/doors').on('child_added', function(snapshot) {
-          var data;
+        data = snapshot.val();
+        _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.health));
+        stillLoadingRooms = true;
+        return anyRoomsLoaded = true;
+      };
+      fb.child('chunks/(0, 0)/rooms').on('child_added', function(snapshot) {
+        var data;
 
-          data = snapshot.val();
-          _this.addDoor(new WD.Door(V2(data.room1.x, data.room1.y), V2(data.room2.x, data.room2.y), data.type));
-          stillLoadingRooms = true;
-          return anyRoomsLoaded = true;
-        });
+        data = snapshot.val();
+        _this.addRoom(new WD.Room(V2(data.position.x, data.position.y), data.color, data.health));
+        stillLoadingRooms = true;
+        return anyRoomsLoaded = true;
+      });
+      return fb.child('chunks/(0, 0)/doors').on('child_added', function(snapshot) {
+        var data;
+
+        data = snapshot.val();
+        _this.addDoor(new WD.Door(V2(data.room1.x, data.room1.y), V2(data.room2.x, data.room2.y), data.type));
+        stillLoadingRooms = true;
+        return anyRoomsLoaded = true;
       });
     };
 
@@ -2594,14 +2610,21 @@
       });
       player.$el.addClass('you');
       keyboardToDirection = function(keyName, vector) {
-        return _this.clock.tick.filter(player.isStill).filter(WD.keyboard.isDown(keyName)).onValue(function() {
-          var nextRoom;
+        var nextRoom;
 
-          nextRoom = _this.adjacentRoom(player.currentRoom, vector);
-          if (!nextRoom) {
-            return;
+        nextRoom = function() {
+          return _this.adjacentRoom(player.currentRoom, vector);
+        };
+        _this.clock.tick.filter(player.isStill).filter(WD.keyboard.isDown(keyName)).onValue(function() {
+          if (nextRoom()) {
+            return player.fb.child('position').set(nextRoom().gridPoint);
           }
-          return player.fb.child('position').set(nextRoom.gridPoint);
+        });
+        return WD.keyboard.downs(keyName).filter(player.isStill).onValue(function() {
+          if (!nextRoom()) {
+            player.fb.child('bonk').set(vector);
+            return player.fb.child('bonk').set(null);
+          }
         });
       };
       keyboardToDirection('left', V2(-1, 0));
@@ -2696,21 +2719,7 @@
       this.initBaconJunk();
       this.fb = fb.child('users').child(this.username);
       this.gameController.roomsLoaded.onValue(function() {
-        return _this.fb.on('value', function(snapshot) {
-          var color, position, room, _ref;
-
-          _ref = snapshot.val(), color = _ref.color, position = _ref.position;
-          _this.color = color;
-          _this.$el.css('background-color', "rgb(" + _this.color.r + ", " + _this.color.g + ", " + _this.color.b + ")");
-          room = _this.gameController.roomAtPoint(V2(position.x, position.y));
-          if (_this.currentRoom !== room) {
-            if (_this.currentRoom) {
-              return _this.walkToRoom(room);
-            } else {
-              return _this.teleportToRoom(room);
-            }
-          }
-        });
+        return _this.bindFirebase();
       });
     }
 
@@ -2770,6 +2779,50 @@
       return this.isStill = isStillBus.toProperty(true);
     };
 
+    Player.prototype.bindFirebase = function() {
+      var updateBonk, updateColor, updatePosition,
+        _this = this;
+
+      console.log('bind firebase');
+      updateColor = function(snapshot) {
+        var data;
+
+        data = snapshot.val();
+        if (_this.color && data.r === _this.color.r && data.g === _this.color.g && data.b === _this.color.b) {
+          return;
+        }
+        _this.color = data;
+        return _this.$el.css('background-color', "rgb(" + _this.color.r + ", " + _this.color.g + ", " + _this.color.b + ")");
+      };
+      this.fb.child('color').on('value', updateColor);
+      updatePosition = function(snapshot) {
+        var position, room;
+
+        position = snapshot.val();
+        if (_this.currentRoom && _this.currentRoom.gridPoint.equals(position)) {
+          return;
+        }
+        room = _this.gameController.roomAtPoint(V2(position.x, position.y));
+        if (_this.currentRoom !== room) {
+          if (_this.currentRoom) {
+            return _this.walkToRoom(room);
+          } else {
+            return _this.teleportToRoom(room);
+          }
+        }
+      };
+      this.fb.child('position').on('value', updatePosition);
+      updateBonk = function(snapshot) {
+        var data;
+
+        data = snapshot.val();
+        if (data) {
+          return _this.bonk(data);
+        }
+      };
+      return this.fb.child('bonk').on('value', updateBonk);
+    };
+
     Player.prototype.teleportToRoom = function(room) {
       var p;
 
@@ -2795,9 +2848,20 @@
       return this.updateStreams(streams);
     };
 
+    Player.prototype.bonk = function(_arg) {
+      var vector, x, y;
+
+      x = _arg.x, y = _arg.y;
+      this.fb.child('bonk').set(null);
+      return vector = V2(x, y);
+    };
+
     Player.prototype.remove = function() {
       this.$el.remove();
-      return this.fb.off('value');
+      this.fb.off('value');
+      this.fb.child('color').off('value');
+      this.fb.child('position').off('value');
+      return this.fb.child('bonk').off('value');
     };
 
     return Player;
@@ -3004,7 +3068,6 @@
         _this = this;
 
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      console.log(args);
       this.gridPoint1 = args[0], this.gridPoint2 = args[1], this.type = args[2];
       if (this.gridPoint2.isLeftOrAbove(this.gridPoint1)) {
         tmp = this.gridPoint1;

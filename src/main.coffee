@@ -99,30 +99,41 @@ class WD.GameController
         return if data == username or not (data of @players)
         @players[data].remove()
 
-      anyRoomsLoaded = false
+      @load($loadingEl)
+
+  load: ($loadingEl) ->
+    anyRoomsLoaded = false
+    stillLoadingRooms = false
+    checkRoomsLoaded = =>
+      if anyRoomsLoaded and not stillLoadingRooms
+        $loadingEl.remove()
+        @roomsLoaded.push(true)
+        return
       stillLoadingRooms = false
-      checkRoomsLoaded = =>
-        if anyRoomsLoaded and not stillLoadingRooms
-          $loadingEl.remove()
-          @roomsLoaded.push(true)
-        stillLoadingRooms = false
-        setTimeout checkRoomsLoaded, 200
-      checkRoomsLoaded()
+      setTimeout checkRoomsLoaded, 200
+    checkRoomsLoaded()
 
-      fb.child('chunks/(0, 0)/rooms').on 'child_added', (snapshot) =>
-        data = snapshot.val()
-        @addRoom new WD.Room(
-          V2(data.position.x, data.position.y), data.color, data.health)
-        stillLoadingRooms = true
-        anyRoomsLoaded = true
+    loadRoom = (snapshot) =>
+      data = snapshot.val()
+      @addRoom new WD.Room(
+        V2(data.position.x, data.position.y), data.color, data.health)
+      stillLoadingRooms = true
+      anyRoomsLoaded = true
 
-      fb.child('chunks/(0, 0)/doors').on 'child_added', (snapshot) =>
-        data = snapshot.val()
-        @addDoor new WD.Door(
-          V2(data.room1.x, data.room1.y),
-          V2(data.room2.x, data.room2.y), data.type)
-        stillLoadingRooms = true
-        anyRoomsLoaded = true
+    fb.child('chunks/(0, 0)/rooms').on 'child_added', (snapshot) =>
+      data = snapshot.val()
+      @addRoom new WD.Room(
+        V2(data.position.x, data.position.y), data.color, data.health)
+      stillLoadingRooms = true
+      anyRoomsLoaded = true
+
+    fb.child('chunks/(0, 0)/doors').on 'child_added', (snapshot) =>
+      data = snapshot.val()
+      @addDoor new WD.Door(
+        V2(data.room1.x, data.room1.y),
+        V2(data.room2.x, data.room2.y), data.type)
+      stillLoadingRooms = true
+      anyRoomsLoaded = true
 
   interactify: (player) ->
     fbOnline = fb.child('online_users').child(player.username)
@@ -136,11 +147,15 @@ class WD.GameController
     player.$el.addClass('you')
 
     keyboardToDirection = (keyName, vector) =>
+      nextRoom = => @adjacentRoom(player.currentRoom, vector)
       @clock.tick.filter(player.isStill).filter(WD.keyboard.isDown(keyName))
         .onValue =>
-          nextRoom = @adjacentRoom(player.currentRoom, vector)
-          return unless nextRoom
-          player.fb.child('position').set(nextRoom.gridPoint)
+          if nextRoom()
+            player.fb.child('position').set(nextRoom().gridPoint)
+      WD.keyboard.downs(keyName).filter(player.isStill).onValue =>
+        unless nextRoom()
+          player.fb.child('bonk').set(vector)
+          player.fb.child('bonk').set(null)
     keyboardToDirection('left', V2(-1, 0))
     keyboardToDirection('right', V2(1, 0))
     keyboardToDirection('up', V2(0, -1))

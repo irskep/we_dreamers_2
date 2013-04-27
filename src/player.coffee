@@ -39,18 +39,7 @@ class WD.Player
     @fb = fb.child('users').child(@username)
 
     @gameController.roomsLoaded.onValue =>
-      @fb.on 'value', (snapshot) =>
-        {color, position} = snapshot.val()
-        @color = color
-        @$el.css('background-color',
-          "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
-        room = @gameController.roomAtPoint(V2(position.x, position.y))
-
-        if @currentRoom != room
-          if @currentRoom
-            @walkToRoom(room)
-          else
-            @teleportToRoom(room)
+      @bindFirebase()
 
   initBaconJunk: ->
     @positionData = {x: 0, y: 0}
@@ -96,6 +85,35 @@ class WD.Player
     @stopMoving = -> isStillBus.push(true)
     @isStill = isStillBus.toProperty(true)
 
+  bindFirebase: ->
+    console.log 'bind firebase'
+    updateColor = (snapshot) =>
+      data = snapshot.val()
+      return if @color and
+        data.r == @color.r and data.g == @color.g and data.b == @color.b
+      @color = data
+      @$el.css('background-color',
+        "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
+    @fb.child('color').on 'value', updateColor
+
+    updatePosition = (snapshot) =>
+      position = snapshot.val()
+      return if @currentRoom and
+        @currentRoom.gridPoint.equals(position)
+      room = @gameController.roomAtPoint(V2(position.x, position.y))
+
+      if @currentRoom != room
+        if @currentRoom
+          @walkToRoom(room)
+        else
+          @teleportToRoom(room)
+    @fb.child('position').on 'value', updatePosition
+
+    updateBonk = (snapshot) =>
+      data = snapshot.val()
+      @bonk(data) if data
+    @fb.child('bonk').on 'value', updateBonk
+
   teleportToRoom: (room) ->
     @currentRoom = room
     p = @currentRoom.center()
@@ -111,6 +129,13 @@ class WD.Player
       @teleportToRoom(room)
     @updateStreams(streams)
 
+  bonk: ({x, y}) ->
+    @fb.child('bonk').set(null)
+    vector = V2(x, y)
+
   remove: ->
     @$el.remove()
     @fb.off('value')
+    @fb.child('color').off('value')
+    @fb.child('position').off('value')
+    @fb.child('bonk').off('value')
