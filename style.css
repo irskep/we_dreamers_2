@@ -46,7 +46,8 @@
 }
 
 .wd-player.you {
-  border: 3px solid black;
+  border: 2px solid black;
+  z-index: 1;  /* above all other players */
 }
 
 .username-prompt-container {

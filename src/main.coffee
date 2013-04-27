@@ -72,6 +72,7 @@ class WD.GameController
 
       fb.child('users').on 'child_added', (snapshot) =>
         data = snapshot.val()
+        return if data.username == username
         @players[data.username] = new WD.Player(@clock, data.username, this)
         @$interactiveContainer.append(@players[data.username].$el)
 
@@ -81,7 +82,6 @@ class WD.GameController
       @clickRoom(@roomAtPoint(gridPoint))
 
     player.$el.addClass('you')
-    console.log player.$el.get(0)
 
     keyboardToDirection = (keyName, vector) =>
       @clock.tick.filter(player.isStill).filter(WD.keyboard.isDown(keyName))

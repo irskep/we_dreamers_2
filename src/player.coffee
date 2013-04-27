@@ -28,7 +28,7 @@ lerpStreams = (clock, startPoint, endPoint, duration) ->
 
 class WD.Player
 
-  constructor: (@clock, @username, @gameController) ->
+  constructor: (@clock, @username, @gameController, cssClass = "") ->
     @gridPosition = V2(0, 0)
     @currentRoom = null
 

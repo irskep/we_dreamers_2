@@ -2466,6 +2466,9 @@
           var data;
 
           data = snapshot.val();
+          if (data.username === username) {
+            return;
+          }
           _this.players[data.username] = new WD.Player(_this.clock, data.username, _this);
           return _this.$interactiveContainer.append(_this.players[data.username].$el);
         });
@@ -2483,7 +2486,6 @@
         return _this.clickRoom(_this.roomAtPoint(gridPoint));
       });
       player.$el.addClass('you');
-      console.log(player.$el.get(0));
       keyboardToDirection = function(keyName, vector) {
         return _this.clock.tick.filter(player.isStill).filter(WD.keyboard.isDown(keyName)).onValue(function() {
           var nextRoom;
@@ -2663,12 +2665,15 @@
   };
 
   WD.Player = (function() {
-    function Player(clock, username, gameController) {
+    function Player(clock, username, gameController, cssClass) {
       var _this = this;
 
       this.clock = clock;
       this.username = username;
       this.gameController = gameController;
+      if (cssClass == null) {
+        cssClass = "";
+      }
       this.gridPosition = V2(0, 0);
       this.currentRoom = null;
       this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
