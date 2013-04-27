@@ -3135,13 +3135,11 @@
       this.color = color;
       this.health = health;
       this.gameController = gameController;
-      this.cssColor = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.health / 100);
       this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        ></div>      ").trim()).css({
         width: WD.ROOM_SIZE,
         height: WD.ROOM_SIZE,
         left: this.gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING,
-        top: this.gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING,
-        'background-color': this.cssColor
+        top: this.gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING
       });
       this.fb = fb.child('chunks/(0, 0)/rooms').child(this.hash());
       this.fb.child('walls').on('child_changed', function(snapshot) {
@@ -3149,7 +3147,16 @@
           return _this.gameController.excavate(_this, Vector2.fromString(snapshot.name()));
         }
       });
+      this.fb.child('color').on('value', function(snapshot) {
+        return _this.updateColor(snapshot.val());
+      });
     }
+
+    Room.prototype.updateColor = function(color) {
+      this.color = color;
+      this.cssColor = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.health / 100);
+      return this.$el.css('background-color', this.cssColor);
+    };
 
     Room.prototype.center = function() {
       return V2(this.gridPoint.x * WD.GRID_SIZE + WD.GRID_SIZE / 2, this.gridPoint.y * WD.GRID_SIZE + WD.GRID_SIZE / 2);
