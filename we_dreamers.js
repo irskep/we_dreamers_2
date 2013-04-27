@@ -2703,18 +2703,20 @@
           lastHarvested: 0
         });
       }
-      if (dGridPoint.x + dGridPoint.y > 1) {
-        return fbDoors.child(room.hash() + newPoint.toString()).set({
-          room1: room.gridPoint,
-          room2: newPoint,
-          type: 'basic'
-        });
-      } else {
-        return fbDoors.child(newPoint.toString() + room.hash()).set({
-          room1: newPoint,
-          room2: room.gridPoint,
-          type: 'basic'
-        });
+      if (!this.adjacentRoom(room, dGridPoint)) {
+        if (dGridPoint.x + dGridPoint.y > 1) {
+          return fbDoors.child(room.hash() + newPoint.toString()).set({
+            room1: room.gridPoint,
+            room2: newPoint,
+            type: 'basic'
+          });
+        } else {
+          return fbDoors.child(newPoint.toString() + room.hash()).set({
+            room1: newPoint,
+            room2: room.gridPoint,
+            type: 'basic'
+          });
+        }
       }
     };
 

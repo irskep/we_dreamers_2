@@ -210,16 +210,17 @@ class WD.GameController
       fbRooms.child(newPoint.toString()).set(
         {position: newPoint, color: WD.mutateColor(room.color), lastHarvested: 0})
 
-    if dGridPoint.x + dGridPoint.y > 1
-      fbDoors.child(room.hash() + newPoint.toString()).set
-        room1: room.gridPoint
-        room2: newPoint
-        type: 'basic'
-    else
-      fbDoors.child(newPoint.toString() + room.hash()).set
-        room1: newPoint
-        room2: room.gridPoint
-        type: 'basic'
+    unless @adjacentRoom(room, dGridPoint)
+      if dGridPoint.x + dGridPoint.y > 1
+        fbDoors.child(room.hash() + newPoint.toString()).set
+          room1: room.gridPoint
+          room2: newPoint
+          type: 'basic'
+      else
+        fbDoors.child(newPoint.toString() + room.hash()).set
+          room1: newPoint
+          room2: room.gridPoint
+          type: 'basic'
 
   harvest: (room) ->
     strength = WD.growiness(room.lastHarvested)
