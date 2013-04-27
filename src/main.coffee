@@ -203,7 +203,7 @@ class WD.GameController
     newPoint = room.gridPoint.add(dGridPoint)
     unless newPoint.toString() of @rooms
       fbRooms.child(newPoint.toString()).set(
-        {position: newPoint, color: room.color, health: 100})
+        {position: newPoint, color: WD.mutateColor(room.color), health: 100})
 
     if dGridPoint.x + dGridPoint.y > 1
       fbDoors.child(room.hash() + newPoint.toString()).set

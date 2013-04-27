@@ -4,6 +4,7 @@ class WD.Room
 
   constructor: (@gridPoint, @color, @health, @gameController) ->
     @cssColor = WD.subtractiveColor(@color.r, @color.g, @color.b, @health / 100)
+    console.log 'mutate', @color, 'into', WD.mutateColor(@color)
     @$el = $("
         <div class='wd-room rounded-rect'
           data-grid-x='#{@gridPoint.x}'
@@ -18,7 +19,7 @@ class WD.Room
     @fb = fb.child('chunks/(0, 0)/rooms').child(@hash())
 
     @fb.child('walls').on 'child_changed', (snapshot) =>
-      if _.keys(snapshot.val()).length > 9
+      if _.keys(snapshot.val()).length > 3
         @gameController.excavate(this, Vector2.fromString(snapshot.name()))
 
   center: ->

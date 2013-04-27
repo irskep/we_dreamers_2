@@ -19,6 +19,23 @@ WD.subtractiveColor = (r, g, b, fraction = 1) ->
     floor = 255 - Math.max(r, g, b)
     "rgb(#{floor + r}, #{floor + g}, #{floor + b})"
 
+WD.mutateColor = (c) ->
+  # max: 100
+  # min: 30
+  strength = c.r + c.g + c.b
+  strength = _.random(Math.max(strength - 10, 30), Math.min(strength + 10, 100))
+  pivot1 = Math.random()
+  pivot2 = Math.random()
+  if pivot1 > pivot2
+    tmp = pivot1
+    pivot1 = pivot2
+    pivot2 = tmp
+  return {
+    r: Math.floor(pivot1 * strength)
+    g: Math.floor((pivot2 - pivot1) * strength)
+    b: Math.floor((1 - pivot2) * strength)
+  }
+
 WD.cssGradientVertical = ($el, a, b) ->
   $el.css('background',
     "-webkit-gradient(linear, left top, left bottom, from(#{a}), to(#{b}))")
@@ -26,7 +43,6 @@ WD.cssGradientVertical = ($el, a, b) ->
 WD.cssGradientHorizontal = ($el, a, b) ->
   $el.css('background',
     "-webkit-gradient(linear, left top, right top, from(#{a}), to(#{b}))")
-
 
 WD.keyboard =
   downs: _.memoize (key) ->

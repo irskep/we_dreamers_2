@@ -2696,7 +2696,7 @@
       if (!(newPoint.toString() in this.rooms)) {
         fbRooms.child(newPoint.toString()).set({
           position: newPoint,
-          color: room.color,
+          color: WD.mutateColor(room.color),
           health: 100
         });
       }
@@ -3071,6 +3071,25 @@
     return "rgb(" + (floor + r) + ", " + (floor + g) + ", " + (floor + b) + ")";
   };
 
+  WD.mutateColor = function(c) {
+    var pivot1, pivot2, strength, tmp;
+
+    strength = c.r + c.g + c.b;
+    strength = _.random(Math.max(strength - 10, 30), Math.min(strength + 10, 100));
+    pivot1 = Math.random();
+    pivot2 = Math.random();
+    if (pivot1 > pivot2) {
+      tmp = pivot1;
+      pivot1 = pivot2;
+      pivot2 = tmp;
+    }
+    return {
+      r: Math.floor(pivot1 * strength),
+      g: Math.floor((pivot2 - pivot1) * strength),
+      b: Math.floor((1 - pivot2) * strength)
+    };
+  };
+
   WD.cssGradientVertical = function($el, a, b) {
     return $el.css('background', "-webkit-gradient(linear, left top, left bottom, from(" + a + "), to(" + b + "))");
   };
@@ -3115,6 +3134,7 @@
       this.health = health;
       this.gameController = gameController;
       this.cssColor = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, this.health / 100);
+      console.log('mutate', this.color, 'into', WD.mutateColor(this.color));
       this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        ></div>      ").trim()).css({
         width: WD.ROOM_SIZE,
         height: WD.ROOM_SIZE,
@@ -3124,7 +3144,7 @@
       });
       this.fb = fb.child('chunks/(0, 0)/rooms').child(this.hash());
       this.fb.child('walls').on('child_changed', function(snapshot) {
-        if (_.keys(snapshot.val()).length > 9) {
+        if (_.keys(snapshot.val()).length > 3) {
           return _this.gameController.excavate(_this, Vector2.fromString(snapshot.name()));
         }
       });
