@@ -2680,6 +2680,7 @@
       level2Listener = function(snapshot) {
         if (player.level >= 2) {
           fbRoomsDug.off('value', level2Listener);
+          return;
         }
         if (snapshot.val() >= 6) {
           return player.fb.child('level').set(2);
@@ -2698,7 +2699,7 @@
           return player.fb.child('level').set(3);
         }
       };
-      fbRoomsDug.on('value', level3Listener);
+      fbNotesLeft.on('value', level3Listener);
       WD.showStats(player);
       WD.showRoom(player);
       return player.currentRoomProperty.filter(_.identity).onValue(function(room) {
@@ -3220,11 +3221,14 @@
         return;
       }
       return $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes()).onValue(function(e) {
+        var isNew;
+
         e.preventDefault();
-        if (!room.fortuneText) {
+        isNew = !room.fortuneText;
+        room.fb.child('fortuneText').set($el.find('input').val());
+        if (isNew) {
           player.fb.child('stats/notesLeft').set((player.stats.notesLeft || 0) + 1);
         }
-        room.fb.child('fortuneText').set($el.find('input').val());
         return false;
       });
     });

@@ -126,10 +126,11 @@ WD.showRoom = (player) =>
     $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes())
       .onValue (e) ->
         e.preventDefault()
-        unless room.fortuneText
+        isNew = !room.fortuneText
+        room.fb.child('fortuneText').set($el.find('input').val())
+        if isNew
           player.fb.child('stats/notesLeft').set(
             (player.stats.notesLeft or 0) + 1)
-        room.fb.child('fortuneText').set($el.find('input').val())
         false
 
   player.currentRoomProperty.sampledBy(player.statsUpdates)
