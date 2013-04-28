@@ -74,11 +74,15 @@ WD.showStats = (player) =>
     <% if (notesLeft) { %>
       <div class="stat-notes-left">Notes written: <%- notesLeft %></div>
     <% } %>
+    <% if (stampsStamped) { %>
+      <div class="stat-stamps-stamped">Stamps: <%- stampsStamped %></div>
+    <% } %>
   """
   player.statsUpdates.onValue (data) ->
     data = _.clone player.stats
     data.level = player.level
     data.notesLeft = player.stats.notesLeft or 0
+    data.stampsStamped = player.stats.stampsStamped or 0
     $el.html(template(data))
     _.each ['r', 'g', 'b'], (k) ->
       $el.find(".stat-#{k}").css
@@ -105,6 +109,9 @@ WD.showRoom = (player) =>
           <% } %>
         </span>
       <% } %>
+      <% if (player.level >= 3) { %>
+        <div class="stamp-room">Press Enter to stamp!</div>
+      <% } %>
     </div>
   """
 
@@ -114,18 +121,19 @@ WD.showRoom = (player) =>
     data.fortuneText = data.fortuneText or ''
     $el.html(template(data))
 
-  player.currentRoomProperty.onValue (room) ->
-    return unless room
-    update(room)
-
-    room.updates.takeUntil(player.currentRoomProperty.changes()).onValue ->
+  player.currentRoomProperty.sampledBy(player.statsUpdates)
+    .merge(player.currentRoomProperty).onValue (room) ->
+      return unless room
       update(room)
 
-    $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes())
-      .onValue (e) ->
-        e.preventDefault()
-        unless room.fortuneText
-          player.fb.child('stats/notesLeft').set(
-            (player.stats.notesLeft or 0) + 1)
-        room.fb.child('fortuneText').set($el.find('input').val())
-        false
+      room.updates.takeUntil(player.currentRoomProperty.changes()).onValue ->
+        update(room)
+
+      $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes())
+        .onValue (e) ->
+          e.preventDefault()
+          unless room.fortuneText
+            player.fb.child('stats/notesLeft').set(
+              (player.stats.notesLeft or 0) + 1)
+          room.fb.child('fortuneText').set($el.find('input').val())
+          false

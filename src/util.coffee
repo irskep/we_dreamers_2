@@ -82,7 +82,6 @@ WD.keyboard =
       .merge($('window').asEventStream('focus').map(false))
       .toProperty(false)
 
-
 WD.time = do ->
   diff = 0
 
@@ -90,3 +89,23 @@ WD.time = do ->
     diff = (new Date(datetime)).getTime() - (new Date()).getTime()
 
   -> (new Date()).getTime() + diff
+
+_stamps = null
+_sortedStampKeys = []
+_stampKeyAfter = {}
+WD.stamp = (k) ->
+  unless _stamps
+    letters = '?!ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    _stamps = _.object _.map letters.split(''), (c) ->
+      _sortedStampKeys.push(c)
+      [c, {type: 'letter', value: c, key: c}]
+    _.each _sortedStampKeys, (k, i, args...) ->
+      _stampKeyAfter[k] = _sortedStampKeys[(i + 1) % _sortedStampKeys.length]
+  _stamps[k]
+
+WD.nextStampKey = (k) ->
+  WD.stamp(k)  # make sure shiznit be iniznit like a hacky mchacker
+  if _stampKeyAfter[k]
+    _stampKeyAfter[k]
+  else
+    'A'  # give up

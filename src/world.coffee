@@ -12,6 +12,7 @@ class WD.Room
           data-grid-y='#{@gridPoint.y}'
         >
           <div class='nw'></div>
+          <div class='stamp'></div>
         </div>
       ".trim()).css
       width: WD.ROOM_SIZE
@@ -25,6 +26,13 @@ class WD.Room
 
     @fb.child('creator').on 'value', (snapshot) =>
       @creator = snapshot.val()
+      @updates.push(this)
+
+    @fb.child('stamp').on 'value', (snapshot) =>
+      @stamp = snapshot.val()
+      return unless @stamp
+      if @stamp.type == 'letter'
+        @$el.find('.stamp').html(_.escape(@stamp.value))
       @updates.push(this)
 
     @fb.child('fortuneText').on 'value', (snapshot) =>

@@ -221,6 +221,9 @@ class WD.GameController
       property.filter(player.isBonking.not()).onValue (v) =>
         @moveWorldContainer(k, -v)
 
+    WD.keyboard.downs('enter').filter(player.isStill).onValue =>
+      @stamp(player.currentRoom)
+
     fbRoomsDug = player.fb.child('stats/roomsDug')
     level2Listener = (snapshot) =>
       fbRoomsDug.off('value', level2Listener) if player.level >= 2
@@ -237,6 +240,10 @@ class WD.GameController
 
     WD.showStats(player)
     WD.showRoom(player)
+
+    player.currentRoomProperty.filter(_.identity).onValue (room) =>
+      $('.current-room').removeClass('current-room')
+      room.$el.addClass('current-room')
 
   moveWorldContainer: (k, v) =>
     @$worldContainer.css({x: 'left', y: 'top'}[k], v)
@@ -299,3 +306,13 @@ class WD.GameController
       @player.fb.child('stats').child(k).set(
         Math.max(
           Math.min(@player.stats[k] + value[k], @player.maxBucket()), 0))
+
+  stamp: (room) ->
+    if room.stamp
+      nextKey = WD.nextStampKey(room.stamp.key)
+    else
+      nextKey = @player.lastStampKey
+      @player.fb.child('stats/stampsStamped').set(
+        (@player.stats.stampsStamped or 0) + 1)
+    @player.lastStampKey = nextKey
+    room.fb.child('stamp').set(WD.stamp(nextKey))

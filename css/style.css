@@ -35,6 +35,24 @@
   left: 20px;
 }
 
+.wd-room .stamp {
+  font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  left: calc(50% - 30px);
+  top: calc(50% - 30px);
+  font-size: 64px;
+  overflow: visible;
+  text-align: center;
+}
+
+.wd-room.current-room .stamp {
+  left: auto;
+  right: -10px;
+  top: -10px;
+}
+
 .wd-door {
   position: absolute;
   z-index: 3;
@@ -129,7 +147,7 @@
   background-color: #04a;
 }
 
-.stat-level, .stat-rooms-dug, .stat-notes-left {
+.stat-level, .stat-rooms-dug, .stat-notes-left, .stat-stamps-stamped {
   clear: both;
   padding: 10px 10px 0 10px;
 }

@@ -54,6 +54,7 @@ class WD.Player
     @midBonks = new Bacon.Bus()
     @bonkBus = new Bacon.Bus()
     @isBonking = @bonkBus.toProperty(false)
+    @lastStampKey = 'A'
 
     @$el = $("<div class='wd-player' data-username='#{@username}'></div>")
 

@@ -2670,6 +2670,9 @@
           return _this.moveWorldContainer(k, -v);
         });
       });
+      WD.keyboard.downs('enter').filter(player.isStill).onValue(function() {
+        return _this.stamp(player.currentRoom);
+      });
       fbRoomsDug = player.fb.child('stats/roomsDug');
       level2Listener = function(snapshot) {
         if (player.level >= 2) {
@@ -2691,7 +2694,11 @@
       };
       fbRoomsDug.on('value', level3Listener);
       WD.showStats(player);
-      return WD.showRoom(player);
+      WD.showRoom(player);
+      return player.currentRoomProperty.filter(_.identity).onValue(function(room) {
+        $('.current-room').removeClass('current-room');
+        return room.$el.addClass('current-room');
+      });
     };
 
     GameController.prototype.moveWorldContainer = function(k, v) {
@@ -2776,6 +2783,19 @@
         value[k] *= 60 + _this.player.level * 10;
         return _this.player.fb.child('stats').child(k).set(Math.max(Math.min(_this.player.stats[k] + value[k], _this.player.maxBucket()), 0));
       });
+    };
+
+    GameController.prototype.stamp = function(room) {
+      var nextKey;
+
+      if (room.stamp) {
+        nextKey = WD.nextStampKey(room.stamp.key);
+      } else {
+        nextKey = this.player.lastStampKey;
+        this.player.fb.child('stats/stampsStamped').set((this.player.stats.stampsStamped || 0) + 1);
+      }
+      this.player.lastStampKey = nextKey;
+      return room.fb.child('stamp').set(WD.stamp(nextKey));
     };
 
     return GameController;
@@ -2866,6 +2886,7 @@
       this.midBonks = new Bacon.Bus();
       this.bonkBus = new Bacon.Bus();
       this.isBonking = this.bonkBus.toProperty(false);
+      this.lastStampKey = 'A';
       this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
       this.initBaconJunk();
       this.fb = fb.child('users').child(this.username);
@@ -3152,11 +3173,12 @@
     var $el, template;
 
     $el = $("<div class='stats'>").appendTo('body');
-    template = _.template("<div class=\"stat-color stat-r\"> </div>\n<div class=\"stat-color stat-g\"> </div>\n<div class=\"stat-color stat-b\"> </div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes written: <%- notesLeft %></div>\n<% } %>");
+    template = _.template("<div class=\"stat-color stat-r\"> </div>\n<div class=\"stat-color stat-g\"> </div>\n<div class=\"stat-color stat-b\"> </div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes written: <%- notesLeft %></div>\n<% } %>\n<% if (stampsStamped) { %>\n  <div class=\"stat-stamps-stamped\">Stamps: <%- stampsStamped %></div>\n<% } %>");
     return player.statsUpdates.onValue(function(data) {
       data = _.clone(player.stats);
       data.level = player.level;
       data.notesLeft = player.stats.notesLeft || 0;
+      data.stampsStamped = player.stats.stampsStamped || 0;
       $el.html(template(data));
       return _.each(['r', 'g', 'b'], function(k) {
         return $el.find(".stat-" + k).css({
@@ -3171,7 +3193,7 @@
     var $el, template, update;
 
     $el = $("<div class='room-info-container'>").appendTo('body');
-    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator && player.level > 1) { %>\n    <form class=\"fortune-form\">\n      <input name=\"fortune\" placeholder=\"Leave a note in this room\"\n       value=\"<%- fortuneText %>\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <span class=\"creator\"><%- creator %> says,</span>\n        &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n</div>");
+    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator && player.level > 1) { %>\n    <form class=\"fortune-form\">\n      <input name=\"fortune\" placeholder=\"Leave a note in this room\"\n       value=\"<%- fortuneText %>\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <span class=\"creator\"><%- creator %> says,</span>\n        &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n  <% if (player.level >= 3) { %>\n    <div class=\"stamp-room\">Press Enter to stamp!</div>\n  <% } %>\n</div>");
     update = function(room) {
       var data;
 
@@ -3180,7 +3202,7 @@
       data.fortuneText = data.fortuneText || '';
       return $el.html(template(data));
     };
-    return player.currentRoomProperty.onValue(function(room) {
+    return player.currentRoomProperty.sampledBy(player.statsUpdates).merge(player.currentRoomProperty).onValue(function(room) {
       if (!room) {
         return;
       }
@@ -3202,6 +3224,9 @@
 }).call(this);
 
 (function() {
+  var _sortedStampKeys, _stampKeyAfter, _stamps,
+    __slice = [].slice;
+
   window.WD = window.WD || {};
 
   WD.GRID_SIZE = 128;
@@ -3367,6 +3392,46 @@
     };
   })();
 
+  _stamps = null;
+
+  _sortedStampKeys = [];
+
+  _stampKeyAfter = {};
+
+  WD.stamp = function(k) {
+    var letters;
+
+    if (!_stamps) {
+      letters = '?!ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      _stamps = _.object(_.map(letters.split(''), function(c) {
+        _sortedStampKeys.push(c);
+        return [
+          c, {
+            type: 'letter',
+            value: c,
+            key: c
+          }
+        ];
+      }));
+      _.each(_sortedStampKeys, function() {
+        var args, i, k;
+
+        k = arguments[0], i = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+        return _stampKeyAfter[k] = _sortedStampKeys[(i + 1) % _sortedStampKeys.length];
+      });
+    }
+    return _stamps[k];
+  };
+
+  WD.nextStampKey = function(k) {
+    WD.stamp(k);
+    if (_stampKeyAfter[k]) {
+      return _stampKeyAfter[k];
+    } else {
+      return 'A';
+    }
+  };
+
 }).call(this);
 
 (function() {
@@ -3391,7 +3456,7 @@
       this.color = color;
       this.lastHarvested = lastHarvested;
       this.gameController = gameController;
-      this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        >          <div class='nw'></div>        </div>      ").trim()).css({
+      this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        >          <div class='nw'></div>          <div class='stamp'></div>        </div>      ").trim()).css({
         width: WD.ROOM_SIZE,
         height: WD.ROOM_SIZE,
         left: this.gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING,
@@ -3401,6 +3466,16 @@
       this.fb = fb.child('chunks/(0, 0)/rooms').child(this.hash());
       this.fb.child('creator').on('value', function(snapshot) {
         _this.creator = snapshot.val();
+        return _this.updates.push(_this);
+      });
+      this.fb.child('stamp').on('value', function(snapshot) {
+        _this.stamp = snapshot.val();
+        if (!_this.stamp) {
+          return;
+        }
+        if (_this.stamp.type === 'letter') {
+          _this.$el.find('.stamp').html(_.escape(_this.stamp.value));
+        }
         return _this.updates.push(_this);
       });
       this.fb.child('fortuneText').on('value', function(snapshot) {
