@@ -121,6 +121,17 @@ WD.showRoom = (player) =>
     data.fortuneText = data.fortuneText or ''
     $el.html(template(data))
 
+  player.currentRoomProperty.onValue (room) ->
+    return unless room
+    $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes())
+      .onValue (e) ->
+        e.preventDefault()
+        unless room.fortuneText
+          player.fb.child('stats/notesLeft').set(
+            (player.stats.notesLeft or 0) + 1)
+        room.fb.child('fortuneText').set($el.find('input').val())
+        false
+
   player.currentRoomProperty.sampledBy(player.statsUpdates)
     .merge(player.currentRoomProperty).onValue (room) ->
       return unless room
@@ -128,12 +139,3 @@ WD.showRoom = (player) =>
 
       room.updates.takeUntil(player.currentRoomProperty.changes()).onValue ->
         update(room)
-
-      $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes())
-        .onValue (e) ->
-          e.preventDefault()
-          unless room.fortuneText
-            player.fb.child('stats/notesLeft').set(
-              (player.stats.notesLeft or 0) + 1)
-          room.fb.child('fortuneText').set($el.find('input').val())
-          false

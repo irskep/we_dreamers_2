@@ -110,11 +110,11 @@ WD.nextStampKey = (k) ->
   if _stampKeyAfter[k]
     _stampKeyAfter[k]
   else
-    'A'  # give up
+    ' '  # give up
 
 WD.prevStampKey = (k) ->
   WD.stamp(k)  # make sure shiznit be iniznit like a hacky mchacker
   if _stampKeyBefore[k]
     _stampKeyBefore[k]
   else
-    'A'  # give up
+    ' '  # give up

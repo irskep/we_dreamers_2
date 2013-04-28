@@ -2691,6 +2691,9 @@
         if (player.level >= 3) {
           fbRoomsDug.off('value', level3Listener);
         }
+        if (player.level !== 2) {
+          return;
+        }
         if (snapshot.val() >= 4) {
           return player.fb.child('level').set(3);
         }
@@ -3212,14 +3215,10 @@
       data.fortuneText = data.fortuneText || '';
       return $el.html(template(data));
     };
-    return player.currentRoomProperty.sampledBy(player.statsUpdates).merge(player.currentRoomProperty).onValue(function(room) {
+    player.currentRoomProperty.onValue(function(room) {
       if (!room) {
         return;
       }
-      update(room);
-      room.updates.takeUntil(player.currentRoomProperty.changes()).onValue(function() {
-        return update(room);
-      });
       return $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes()).onValue(function(e) {
         e.preventDefault();
         if (!room.fortuneText) {
@@ -3227,6 +3226,15 @@
         }
         room.fb.child('fortuneText').set($el.find('input').val());
         return false;
+      });
+    });
+    return player.currentRoomProperty.sampledBy(player.statsUpdates).merge(player.currentRoomProperty).onValue(function(room) {
+      if (!room) {
+        return;
+      }
+      update(room);
+      return room.updates.takeUntil(player.currentRoomProperty.changes()).onValue(function() {
+        return update(room);
       });
     });
   };
@@ -3441,7 +3449,7 @@
     if (_stampKeyAfter[k]) {
       return _stampKeyAfter[k];
     } else {
-      return 'A';
+      return ' ';
     }
   };
 
@@ -3450,7 +3458,7 @@
     if (_stampKeyBefore[k]) {
       return _stampKeyBefore[k];
     } else {
-      return 'A';
+      return ' ';
     }
   };
 
