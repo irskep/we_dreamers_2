@@ -2673,7 +2673,7 @@
       fbRoomsDug = player.fb.child('stats/roomsDug');
       level2Listener = function(snapshot) {
         if (player.level >= 2) {
-          fbRoomsDug.off(level2Listener);
+          fbRoomsDug.off('value', level2Listener);
         }
         if (snapshot.val() >= 10) {
           return player.fb.child('level').set(2);
