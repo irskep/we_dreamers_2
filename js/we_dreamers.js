@@ -3246,7 +3246,7 @@
     var $el, template;
 
     $el = $("<div class='stats'>").appendTo('body');
-    template = _.template("<div class=\"stat-color stat-r\"><div class=\"color-key mono\">r</div></div>\n<div class=\"stat-color stat-g\"><div class=\"color-key mono\">g</div></div>\n<div class=\"stat-color stat-b\"><div class=\"color-key mono\">b</div></div>\n<div class=\"color-key-instructions\">\n  Press <span class=\"mono\">r</span>, <span class=\"mono\">g</span>,\n  and <span class=\"mono\">b</span> to mix what color your next room will be.\n  Your dot shows your next room's color.\n  <hr>\n</div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes written: <%- notesLeft %></div>\n<% } %>\n<% if (stampsStamped) { %>\n  <div class=\"stat-stamps-stamped\">Stamps: <%- stampsStamped %></div>\n<% } %>\n<% if (level >= 3) { %>\n  <div class=\"stamp-instructions\">Press J and K to stamp</div>\n<% } %>");
+    template = _.template("<div class=\"stat-color stat-r\"><div class=\"color-key mono\">r</div></div>\n<div class=\"stat-color stat-g\"><div class=\"color-key mono\">g</div></div>\n<div class=\"stat-color stat-b\"><div class=\"color-key mono\">b</div></div>\n<div class=\"color-key-instructions\">\n  Press <span class=\"mono\">r</span>, <span class=\"mono\">g</span>,\n  and <span class=\"mono\">b</span> to mix what color your next room will be.\n  Your dot shows your next room's color.\n  <hr>\n</div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes written: <%- notesLeft %></div>\n<% } %>\n<% if (stampsStamped) { %>\n  <div class=\"stat-stamps-stamped\">Stamps: <%- stampsStamped %></div>\n<% } %>\n<% if (level == 1) { %>\n  <div class=\"level-instructions\">Dig rooms to reach level 2.</div>\n<% } %>\n<% if (level == 2) { %>\n  <div class=\"level-instructions\">\n    Leave notes on rooms you dug to reach level 3.\n </div>\n<% } %>\n<% if (level >= 3) { %>\n  <div class=\"stamp-instructions\">Press J and K to stamp</div>\n<% } %>");
     return player.statsUpdates.onValue(function(data) {
       data = _.clone(player.stats);
       data.level = player.level;
@@ -3580,7 +3580,7 @@
       this.color = color;
       this.lastHarvested = lastHarvested;
       this.gameController = gameController;
-      this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        >          <div class='nw'></div>          <div class='stamp'></div>        </div>      ").trim()).css({
+      this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        >          <div class='nw'></div>          <div class='sw'></div>          <div class='stamp'></div>        </div>      ").trim()).css({
         width: WD.ROOM_SIZE,
         height: WD.ROOM_SIZE,
         left: this.gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING,
@@ -3590,6 +3590,11 @@
       this.fb = fb.child('chunks/(0, 0)/rooms').child(this.hash());
       this.fb.child('creator').on('value', function(snapshot) {
         _this.creator = snapshot.val();
+        if (_this.creator === _this.gameController.player.username) {
+          _this.$el.find('.sw').show();
+        } else {
+          _this.$el.find('.sw').hide();
+        }
         return _this.updates.push(_this);
       });
       this.fb.child('stamp').on('value', function(snapshot) {

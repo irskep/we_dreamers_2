@@ -12,6 +12,7 @@ class WD.Room
           data-grid-y='#{@gridPoint.y}'
         >
           <div class='nw'></div>
+          <div class='sw'></div>
           <div class='stamp'></div>
         </div>
       ".trim()).css
@@ -26,6 +27,10 @@ class WD.Room
 
     @fb.child('creator').on 'value', (snapshot) =>
       @creator = snapshot.val()
+      if @creator == @gameController.player.username
+        @$el.find('.sw').show()
+      else
+        @$el.find('.sw').hide()
       @updates.push(this)
 
     @fb.child('stamp').on 'value', (snapshot) =>

@@ -85,6 +85,14 @@ WD.showStats = (player) =>
     <% if (stampsStamped) { %>
       <div class="stat-stamps-stamped">Stamps: <%- stampsStamped %></div>
     <% } %>
+    <% if (level == 1) { %>
+      <div class="level-instructions">Dig rooms to reach level 2.</div>
+    <% } %>
+    <% if (level == 2) { %>
+      <div class="level-instructions">
+        Leave notes on rooms you dug to reach level 3.
+     </div>
+    <% } %>
     <% if (level >= 3) { %>
       <div class="stamp-instructions">Press J and K to stamp</div>
     <% } %>

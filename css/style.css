@@ -35,6 +35,16 @@
   left: 20px;
 }
 
+.wd-room .sw {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 10px;
+  height: 10px;
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
 .wd-room .stamp {
   font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
   position: absolute;
@@ -166,6 +176,13 @@
 }
 
 .stamp-instructions {
+  width: 120px;
+  clear: both;
+  padding: 10px 10px 0 10px;
+  font-size: 12px;
+}
+
+.level-instructions {
   width: 120px;
   clear: both;
   padding: 10px 10px 0 10px;
