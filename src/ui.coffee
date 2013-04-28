@@ -72,7 +72,7 @@ WD.showStats = (player) =>
       <div class="stat-rooms-dug">Rooms Dug: <%- roomsDug %></div>
     <% } %>
     <% if (notesLeft) { %>
-      <div class="stat-notes-left">Notes left: <%- notesLeft %></div>
+      <div class="stat-notes-left">Notes written: <%- notesLeft %></div>
     <% } %>
   """
   player.statsUpdates.onValue (data) ->
