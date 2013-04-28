@@ -165,6 +165,13 @@
   font-size: 12px;
 }
 
+.stamp-instructions {
+  width: 120px;
+  clear: both;
+  padding: 10px 10px 0 10px;
+  font-size: 12px;
+}
+
 .mono {
   font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
 }

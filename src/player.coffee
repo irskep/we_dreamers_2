@@ -39,6 +39,7 @@ class WD.Player
 
   constructor: (@clock, @username, @gameController) ->
     @gridPosition = V2(0, 0)
+    @loaded = false
     @stats =
       r: 0
       g: 0
@@ -54,7 +55,7 @@ class WD.Player
     @midBonks = new Bacon.Bus()
     @bonkBus = new Bacon.Bus()
     @isBonking = @bonkBus.toProperty(false)
-    @lastStampKey = 'A'
+    @lastStampKey = '?'
 
     @$el = $("<div class='wd-player' data-username='#{@username}'></div>")
 
@@ -147,6 +148,7 @@ class WD.Player
       @$el.removeClass('level-5')
       @$el.addClass("level-#{@level}")
       @statsUpdates.push(@stats)
+      @loaded = true
 
   teleportToRoom: (room) ->
     @currentRoom = room

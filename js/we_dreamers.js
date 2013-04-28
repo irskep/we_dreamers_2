@@ -2679,6 +2679,9 @@
       });
       fbRoomsDug = player.fb.child('stats/roomsDug');
       level2Listener = function(snapshot) {
+        if (!player.loaded) {
+          return;
+        }
         if (player.level >= 2) {
           fbRoomsDug.off('value', level2Listener);
           return;
@@ -2690,6 +2693,9 @@
       fbRoomsDug.on('value', level2Listener);
       fbNotesLeft = player.fb.child('stats/notesLeft');
       level3Listener = function(snapshot) {
+        if (!player.loaded) {
+          return;
+        }
         if (player.level >= 3) {
           fbRoomsDug.off('value', level3Listener);
         }
@@ -2896,6 +2902,7 @@
       this.gameController = gameController;
       this.canBonk = __bind(this.canBonk, this);
       this.gridPosition = V2(0, 0);
+      this.loaded = false;
       this.stats = {
         r: 0,
         g: 0,
@@ -2912,7 +2919,7 @@
       this.midBonks = new Bacon.Bus();
       this.bonkBus = new Bacon.Bus();
       this.isBonking = this.bonkBus.toProperty(false);
-      this.lastStampKey = 'A';
+      this.lastStampKey = '?';
       this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
       this.initBaconJunk();
       this.fb = fb.child('users').child(this.username);
@@ -3020,7 +3027,8 @@
         _this.$el.removeClass('level-4');
         _this.$el.removeClass('level-5');
         _this.$el.addClass("level-" + _this.level);
-        return _this.statsUpdates.push(_this.stats);
+        _this.statsUpdates.push(_this.stats);
+        return _this.loaded = true;
       });
     };
 
@@ -3197,7 +3205,7 @@
     var $el, template;
 
     $el = $("<div class='stats'>").appendTo('body');
-    template = _.template("<div class=\"stat-color stat-r\"><div class=\"color-key mono\">r</div></div>\n<div class=\"stat-color stat-g\"><div class=\"color-key mono\">g</div></div>\n<div class=\"stat-color stat-b\"><div class=\"color-key mono\">b</div></div>\n<div class=\"color-key-instructions\">\n  Press <span class=\"mono\">r</span>, <span class=\"mono\">g</span>,\n  and <span class=\"mono\">b</span> to mix what color your next room will be.\n  Your dot shows your next room's color.\n  <hr>\n</div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes written: <%- notesLeft %></div>\n<% } %>\n<% if (stampsStamped) { %>\n  <div class=\"stat-stamps-stamped\">Stamps: <%- stampsStamped %></div>\n<% } %>");
+    template = _.template("<div class=\"stat-color stat-r\"><div class=\"color-key mono\">r</div></div>\n<div class=\"stat-color stat-g\"><div class=\"color-key mono\">g</div></div>\n<div class=\"stat-color stat-b\"><div class=\"color-key mono\">b</div></div>\n<div class=\"color-key-instructions\">\n  Press <span class=\"mono\">r</span>, <span class=\"mono\">g</span>,\n  and <span class=\"mono\">b</span> to mix what color your next room will be.\n  Your dot shows your next room's color.\n  <hr>\n</div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes written: <%- notesLeft %></div>\n<% } %>\n<% if (stampsStamped) { %>\n  <div class=\"stat-stamps-stamped\">Stamps: <%- stampsStamped %></div>\n<% } %>\n<% if (level >= 3) { %>\n  <div class=\"stamp-instructions\">Press J and K to stamp!</div>\n<% } %>");
     return player.statsUpdates.onValue(function(data) {
       data = _.clone(player.stats);
       data.level = player.level;
@@ -3217,7 +3225,7 @@
     var $el, template, update;
 
     $el = $("<div class='room-info-container'>").appendTo('body');
-    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator && player.level > 1) { %>\n    <form class=\"fortune-form\">\n      <input name=\"fortune\" placeholder=\"Leave a note in this room\"\n       value=\"<%- fortuneText %>\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <span class=\"creator\"><%- creator %> says,</span>\n        &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n  <% if (player.level >= 3) { %>\n    <div class=\"stamp-room\">Press J and K to stamp!</div>\n  <% } %>\n</div>");
+    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator && player.level > 1) { %>\n    <form class=\"fortune-form\">\n      <input name=\"fortune\" placeholder=\"Leave a note in this room\"\n       value=\"<%- fortuneText %>\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <span class=\"creator\"><%- creator %> says,</span>\n        &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n</div>");
     update = function(room) {
       var data;
 

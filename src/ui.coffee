@@ -83,6 +83,9 @@ WD.showStats = (player) =>
     <% if (stampsStamped) { %>
       <div class="stat-stamps-stamped">Stamps: <%- stampsStamped %></div>
     <% } %>
+    <% if (level >= 3) { %>
+      <div class="stamp-instructions">Press J and K to stamp!</div>
+    <% } %>
   """
   player.statsUpdates.onValue (data) ->
     data = _.clone player.stats
@@ -114,9 +117,6 @@ WD.showRoom = (player) =>
             Dug by <%- creator %>
           <% } %>
         </span>
-      <% } %>
-      <% if (player.level >= 3) { %>
-        <div class="stamp-room">Press J and K to stamp!</div>
       <% } %>
     </div>
   """
