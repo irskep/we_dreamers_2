@@ -43,10 +43,6 @@
 .wd-player {
   box-sizing: border-box;
   position: absolute;
-  width: 20px;
-  height: 20px;
-  margin: -10px 0px 0px -10px;
-  border-radius: 20px;
   background-color: white;
   border: 1px solid #aaa;
 }
@@ -54,6 +50,27 @@
 .wd-player.you {
   border: 2px solid black;
   z-index: 1;  /* above all other players */
+}
+
+.wd-player.level-1 {
+  width: 20px;
+  height: 20px;
+  margin: -10px 0px 0px -10px;
+  border-radius: 20px;
+}
+
+.wd-player.level-2 {
+  width: 30px;
+  height: 30px;
+  margin: -15px 0px 0px -15px;
+  border-radius: 30px;
+}
+
+.wd-player.level-3 {
+  width: 40px;
+  height: 40px;
+  margin: -20px 0px 0px -20px;
+  border-radius: 40px;
 }
 
 .username-prompt-container {

@@ -134,6 +134,12 @@ class WD.Player
 
     @fb.child('level').on 'value', (snapshot) =>
       @level = snapshot.val() or 1
+      @$el.removeClass('level-1')
+      @$el.removeClass('level-2')
+      @$el.removeClass('level-3')
+      @$el.removeClass('level-4')
+      @$el.removeClass('level-5')
+      @$el.addClass("level-#{@level}")
       @statsUpdates.push(@stats)
 
   teleportToRoom: (room) ->

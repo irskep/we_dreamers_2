@@ -2616,7 +2616,7 @@
     };
 
     GameController.prototype.interactify = function(player) {
-      var fbOnline, fbRoomsDug, keyboardToDirection, level2Listener,
+      var fbNotesLeft, fbOnline, fbRoomsDug, keyboardToDirection, level2Listener, level3Listener,
         _this = this;
 
       fbOnline = fb.child('online_users').child(player.username);
@@ -2675,11 +2675,21 @@
         if (player.level >= 2) {
           fbRoomsDug.off('value', level2Listener);
         }
-        if (snapshot.val() >= 10) {
+        if (snapshot.val() >= 6) {
           return player.fb.child('level').set(2);
         }
       };
       fbRoomsDug.on('value', level2Listener);
+      fbNotesLeft = player.fb.child('stats/notesLeft');
+      level3Listener = function(snapshot) {
+        if (player.level >= 3) {
+          fbRoomsDug.off('value', level3Listener);
+        }
+        if (snapshot.val() >= 4) {
+          return player.fb.child('level').set(3);
+        }
+      };
+      fbRoomsDug.on('value', level3Listener);
       WD.showStats(player);
       return WD.showRoom(player);
     };
@@ -2763,10 +2773,7 @@
       value = room.currentValue();
       room.fb.child('lastHarvested').set(WD.time());
       return _.each(['r', 'g', 'b'], function(k) {
-        value[k] *= 70;
-        if (_this.player.username === 'Steve') {
-          value[k] *= 10;
-        }
+        value[k] *= 60 + _this.player.level * 10;
         return _this.player.fb.child('stats').child(k).set(Math.max(Math.min(_this.player.stats[k] + value[k], _this.player.maxBucket()), 0));
       });
     };
@@ -2956,6 +2963,12 @@
       });
       return this.fb.child('level').on('value', function(snapshot) {
         _this.level = snapshot.val() || 1;
+        _this.$el.removeClass('level-1');
+        _this.$el.removeClass('level-2');
+        _this.$el.removeClass('level-3');
+        _this.$el.removeClass('level-4');
+        _this.$el.removeClass('level-5');
+        _this.$el.addClass("level-" + _this.level);
         return _this.statsUpdates.push(_this.stats);
       });
     };

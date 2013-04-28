@@ -224,9 +224,16 @@ class WD.GameController
     fbRoomsDug = player.fb.child('stats/roomsDug')
     level2Listener = (snapshot) =>
       fbRoomsDug.off('value', level2Listener) if player.level >= 2
-      if snapshot.val() >= 10
+      if snapshot.val() >= 6
         player.fb.child('level').set(2)
     fbRoomsDug.on 'value', level2Listener
+
+    fbNotesLeft = player.fb.child('stats/notesLeft')
+    level3Listener = (snapshot) =>
+      fbRoomsDug.off('value', level3Listener) if player.level >= 3
+      if snapshot.val() >= 4
+        player.fb.child('level').set(3)
+    fbRoomsDug.on 'value', level3Listener
 
     WD.showStats(player)
     WD.showRoom(player)
@@ -288,9 +295,7 @@ class WD.GameController
     value = room.currentValue()
     room.fb.child('lastHarvested').set(WD.time())
     _.each ['r', 'g', 'b'], (k) =>
-      value[k] *= 70
-      if @player.username == 'Steve'
-        value[k] *= 10
+      value[k] *= (60 + @player.level * 10)
       @player.fb.child('stats').child(k).set(
         Math.max(
           Math.min(@player.stats[k] + value[k], @player.maxBucket()), 0))
