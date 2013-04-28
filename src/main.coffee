@@ -2,16 +2,23 @@ window.WD = window.WD or {}
 
 window.fb = (new Firebase('https://we-dreamers.firebaseio.com/LD26'))
 
+# hax
+WD.useFirefoxGradients = false
+
 class WD.Clock
 
   constructor: ->
     @tick = new Bacon.Bus()
 
+    raf = window.requestAnimationFrame
+    unless raf
+      raf = window.mozRequestAnimationFrame
+      WD.useFirefoxGradients = true
     animate = (t) =>
       @t = t
       @tick.push(t)
-      window.requestAnimationFrame animate
-    window.requestAnimationFrame animate
+      raf(animate)
+    raf(animate)
 
   now: -> @t
 

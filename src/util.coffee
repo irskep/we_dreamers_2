@@ -53,12 +53,20 @@ WD.mutateColor = (c, minSaturation = 0.6, maxSaturation = 0.75) ->
   {r, g, b}
 
 WD.cssGradientVertical = ($el, a, b) ->
-  $el.css('background',
-    "-webkit-gradient(linear, left top, left bottom, from(#{a}), to(#{b}))")
+  if WD.useFirefoxGradients
+    $el.css('background', 
+      "-moz-linear-gradient(top, #{a} 0%, #{b} 100%)")
+  else
+    $el.css('background',
+      "-webkit-gradient(linear, left top, left bottom, from(#{a}), to(#{b}))")
 
 WD.cssGradientHorizontal = ($el, a, b) ->
-  $el.css('background',
-    "-webkit-gradient(linear, left top, right top, from(#{a}), to(#{b}))")
+  if WD.useFirefoxGradients
+    $el.css('background', 
+      "-moz-linear-gradient(left, #{a} 0%, #{b} 100%)")
+  else
+    $el.css('background',
+      "-webkit-gradient(linear, left top, right top, from(#{a}), to(#{b}))")
 
 WD.keyboard =
   downs: _.memoize (key) ->

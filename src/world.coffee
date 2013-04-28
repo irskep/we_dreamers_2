@@ -19,6 +19,9 @@ class WD.Room
 
     @fb = fb.child('chunks/(0, 0)/rooms').child(@hash())
 
+    @fb.child('creator').on 'value', (snapshot) =>
+      @creator = snapshot.val()
+
     @fb.child('color').on 'value', (snapshot) =>
       @color = snapshot.val()
       @updateColor()

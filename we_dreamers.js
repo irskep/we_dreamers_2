@@ -2389,18 +2389,25 @@
 
   window.fb = new Firebase('https://we-dreamers.firebaseio.com/LD26');
 
+  WD.useFirefoxGradients = false;
+
   WD.Clock = (function() {
     function Clock() {
-      var animate,
+      var animate, raf,
         _this = this;
 
       this.tick = new Bacon.Bus();
+      raf = window.requestAnimationFrame;
+      if (!raf) {
+        raf = window.mozRequestAnimationFrame;
+        WD.useFirefoxGradients = true;
+      }
       animate = function(t) {
         _this.t = t;
         _this.tick.push(t);
-        return window.requestAnimationFrame(animate);
+        return raf(animate);
       };
-      window.requestAnimationFrame(animate);
+      raf(animate);
     }
 
     Clock.prototype.now = function() {
@@ -2937,10 +2944,11 @@
 
       this.currentRoom = room;
       p = this.currentRoom.center();
-      return this.updateStreams({
+      this.updateStreams({
         x: Bacon.constant(p.x),
         y: Bacon.constant(p.y)
       });
+      return console.log(room.creator);
     };
 
     Player.prototype.walkToRoom = function(room) {
@@ -3234,11 +3242,19 @@
   };
 
   WD.cssGradientVertical = function($el, a, b) {
-    return $el.css('background', "-webkit-gradient(linear, left top, left bottom, from(" + a + "), to(" + b + "))");
+    if (WD.useFirefoxGradients) {
+      return $el.css('background', "-moz-linear-gradient(top, " + a + " 0%, " + b + " 100%)");
+    } else {
+      return $el.css('background', "-webkit-gradient(linear, left top, left bottom, from(" + a + "), to(" + b + "))");
+    }
   };
 
   WD.cssGradientHorizontal = function($el, a, b) {
-    return $el.css('background', "-webkit-gradient(linear, left top, right top, from(" + a + "), to(" + b + "))");
+    if (WD.useFirefoxGradients) {
+      return $el.css('background', "-moz-linear-gradient(left, " + a + " 0%, " + b + " 100%)");
+    } else {
+      return $el.css('background', "-webkit-gradient(linear, left top, right top, from(" + a + "), to(" + b + "))");
+    }
   };
 
   WD.keyboard = {
@@ -3309,6 +3325,9 @@
         top: this.gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING
       });
       this.fb = fb.child('chunks/(0, 0)/rooms').child(this.hash());
+      this.fb.child('creator').on('value', function(snapshot) {
+        return _this.creator = snapshot.val();
+      });
       this.fb.child('color').on('value', function(snapshot) {
         _this.color = snapshot.val();
         return _this.updateColor();
