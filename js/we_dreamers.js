@@ -3447,8 +3447,8 @@
 
   WD.prevStampKey = function(k) {
     WD.stamp(k);
-    if (_stampKeyAfter[k]) {
-      return _stampKeyAfter[k];
+    if (_stampKeyBefore[k]) {
+      return _stampKeyBefore[k];
     } else {
       return 'A';
     }
