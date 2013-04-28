@@ -2847,7 +2847,8 @@
         r: 0,
         g: 0,
         b: 0,
-        roomsDug: 0
+        roomsDug: 0,
+        notesLeft: 0
       };
       this.currentRoom = null;
       this.currentRoomBus = new Bacon.Bus();
@@ -3138,6 +3139,7 @@
     return player.statsUpdates.onValue(function(data) {
       data = _.clone(player.stats);
       data.level = player.level;
+      data.notesLeft = player.stats.notesLeft || 0;
       $el.html(template(data));
       return _.each(['r', 'g', 'b'], function(k) {
         return $el.find(".stat-" + k).css({
@@ -3171,6 +3173,9 @@
       });
       return $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes()).onValue(function(e) {
         e.preventDefault();
+        if (!room.fortuneText) {
+          player.fb.child('stats/notesLeft').set((player.stats.notesLeft || 0) + 1);
+        }
         room.fb.child('fortuneText').set($el.find('input').val());
         return false;
       });

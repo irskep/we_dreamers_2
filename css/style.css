@@ -112,7 +112,7 @@
   background-color: #04a;
 }
 
-.stat-level, .stat-rooms-dug {
+.stat-level, .stat-rooms-dug, .stat-notes-left {
   clear: both;
   padding: 10px 10px 0 10px;
 }

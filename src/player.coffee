@@ -44,6 +44,7 @@ class WD.Player
       g: 0
       b: 0
       roomsDug: 0
+      notesLeft: 0
     @currentRoom = null
     @currentRoomBus = new Bacon.Bus()
     @currentRoomProperty = @currentRoomBus.skipDuplicates().toProperty(null)

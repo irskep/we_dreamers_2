@@ -78,6 +78,7 @@ WD.showStats = (player) =>
   player.statsUpdates.onValue (data) ->
     data = _.clone player.stats
     data.level = player.level
+    data.notesLeft = player.stats.notesLeft or 0
     $el.html(template(data))
     _.each ['r', 'g', 'b'], (k) ->
       $el.find(".stat-#{k}").css
@@ -123,5 +124,8 @@ WD.showRoom = (player) =>
     $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes())
       .onValue (e) ->
         e.preventDefault()
+        unless room.fortuneText
+          player.fb.child('stats/notesLeft').set(
+            (player.stats.notesLeft or 0) + 1)
         room.fb.child('fortuneText').set($el.find('input').val())
         false
