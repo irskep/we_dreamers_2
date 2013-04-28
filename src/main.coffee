@@ -204,8 +204,8 @@ class WD.GameController
     keyboardToDirection('w', V2(0, -1))
     keyboardToDirection('s', V2(0, 1))
 
-    WD.keyboard.downs('space').filter(player.isStill).onValue =>
-      @harvest(player.currentRoom)
+    WD.keyboard.downs('space').filter(player.isStill).onValue _.throttle(
+      (=> @harvest(player.currentRoom)), 500)
 
     _.each player.positionProperties, (property, k) =>
       property.onValue (v) =>

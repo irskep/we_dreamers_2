@@ -2651,9 +2651,9 @@
       keyboardToDirection('d', V2(1, 0));
       keyboardToDirection('w', V2(0, -1));
       keyboardToDirection('s', V2(0, 1));
-      WD.keyboard.downs('space').filter(player.isStill).onValue(function() {
+      WD.keyboard.downs('space').filter(player.isStill).onValue(_.throttle((function() {
         return _this.harvest(player.currentRoom);
-      });
+      }), 500));
       _.each(player.positionProperties, function(property, k) {
         return property.onValue(function(v) {
           return _this.moveWorldContainer(k, -v);
@@ -3221,14 +3221,10 @@
     if (maxSaturation == null) {
       maxSaturation = 0.75;
     }
-    console.log('mutating', c);
     _ref = WD.rgb2hsv(c.r, c.g, c.b).a, h = _ref[0], s = _ref[1], v = _ref[2];
-    console.log('got', h, s, v);
-    h = (h + _.random(-30, 30) + 360) % 360;
-    console.log('new hue is', h);
+    h = (h + _.random(-60, 60) + 360) % 360;
     s += _.random(-15, 15);
     s = Math.max(Math.min(s, maxSaturation * 100), minSaturation * 100);
-    console.log('new saturation is', h);
     _ref1 = Colors.hsv2rgb(h, s, 100).a, r = _ref1[0], g = _ref1[1], b = _ref1[2];
     return {
       r: r,

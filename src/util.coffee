@@ -45,14 +45,10 @@ WD.valueOfColor = (c, minSaturation = 0.6, maxSaturation = 0.75) ->
   {r: value * (c.r / total), g: value * (c.g / total), b: value * (c.b / total)}
 
 WD.mutateColor = (c, minSaturation = 0.6, maxSaturation = 0.75) ->
-  console.log 'mutating', c
   [h, s, v] = WD.rgb2hsv(c.r, c.g, c.b).a
-  console.log 'got', h, s, v
-  h = (h + _.random(-30, 30) + 360) % 360
-  console.log 'new hue is', h
+  h = (h + _.random(-60, 60) + 360) % 360
   s += _.random(-15, 15)
   s = Math.max(Math.min(s, maxSaturation * 100), minSaturation * 100)
-  console.log 'new saturation is', h
   [r, g, b] = Colors.hsv2rgb(h, s, 100).a
   {r, g, b}
 
