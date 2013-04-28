@@ -2645,11 +2645,7 @@
             player.fb.child('bonk').set(vector);
             player.fb.child('bonk').set(null);
             return player.midBonks.take(1).onValue(function(dGridPoint) {
-              _this.weaken(player.currentRoom, dGridPoint);
-              _this.player.stats['r'] -= WD.BONK_AMOUNT;
-              _this.player.stats['g'] -= WD.BONK_AMOUNT;
-              _this.player.stats['b'] -= WD.BONK_AMOUNT;
-              return _this.player.fb.child('stats').set(_this.player.stats);
+              return _this.weaken(player.currentRoom, dGridPoint);
             });
           }
         });
@@ -2748,17 +2744,25 @@
     };
 
     GameController.prototype.excavate = function(room, dGridPoint) {
-      var fbChunkZero, fbDoors, fbRooms, newPoint;
+      var channelTotal, fbChunkZero, fbDoors, fbRooms, newColor, newPoint,
+        _this = this;
 
       fbChunkZero = fb.child('chunks').child(WD.chunkForPoint(V2(0, 0)));
       fbRooms = fbChunkZero.child('rooms');
       fbDoors = fbChunkZero.child('doors');
       newPoint = room.gridPoint.add(dGridPoint);
       if (!(newPoint.toString() in this.rooms)) {
+        newColor = WD.saturate(this.player.stats);
+        channelTotal = newColor.r + newColor.g + newColor.b;
+        _.each(['r', 'g', 'b'], function(k) {
+          _this.player.stats[k] -= (newColor[k] / channelTotal) * WD.BONK_AMOUNT;
+          return _this.player.stats[k] = Math.max(_this.player.stats[k], 0);
+        });
+        this.player.fb.child('stats').set(this.player.stats);
         this.player.fb.child('stats/roomsDug').set(this.player.stats.roomsDug + 1);
         fbRooms.child(newPoint.toString()).set({
           position: newPoint,
-          color: WD.mutateColor(room.color),
+          color: newColor,
           lastHarvested: 0,
           creator: this.player.username
         });
@@ -3086,7 +3090,7 @@
     };
 
     Player.prototype.canBonk = function() {
-      return this.stats.r + this.stats.g + this.stats.b >= WD.BONK_AMOUNT * 2;
+      return this.stats.r + this.stats.g + this.stats.b >= WD.BONK_AMOUNT;
     };
 
     return Player;
@@ -3266,7 +3270,7 @@
 
   WD.COLOR_CHANNEL_MAX = 70;
 
-  WD.BONK_AMOUNT = 40;
+  WD.BONK_AMOUNT = 80;
 
   WD.run = function(selector) {
     return (new WD.GameController($(selector))).run();
@@ -3373,7 +3377,7 @@
     g /= max;
     b /= max;
     _ref = WD.rgb2hsv(Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)).a, h = _ref[0], s = _ref[1], v = _ref[2];
-    _ref1 = _.map(Colors.hsv2rgb(h, 100, 100).a, Math.floor), r = _ref1[0], g = _ref1[1], b = _ref1[2];
+    _ref1 = _.map(Colors.hsv2rgb(h, 75, 100).a, Math.floor), r = _ref1[0], g = _ref1[1], b = _ref1[2];
     return {
       r: r,
       g: g,

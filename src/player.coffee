@@ -192,4 +192,4 @@ class WD.Player
   maxBucket: ->
     WD.BASE_MAX_BUCKET + (100 * (@level - 1))
 
-  canBonk: => @stats.r + @stats.g + @stats.b >= WD.BONK_AMOUNT * 2
+  canBonk: => @stats.r + @stats.g + @stats.b >= WD.BONK_AMOUNT

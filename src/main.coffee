@@ -200,10 +200,6 @@ class WD.GameController
             player.fb.child('bonk').set(null)
             player.midBonks.take(1).onValue (dGridPoint) =>
               @weaken(player.currentRoom, dGridPoint)
-              @player.stats['r'] -= WD.BONK_AMOUNT
-              @player.stats['g'] -= WD.BONK_AMOUNT
-              @player.stats['b'] -= WD.BONK_AMOUNT
-              @player.fb.child('stats').set(@player.stats)
 
     keyboardToDirection('left', V2(-1, 0))
     keyboardToDirection('right', V2(1, 0))
@@ -287,10 +283,19 @@ class WD.GameController
     newPoint = room.gridPoint.add(dGridPoint)
 
     unless newPoint.toString() of @rooms
+      newColor = WD.saturate(@player.stats)
+      channelTotal = newColor.r + newColor.g + newColor.b
+      _.each ['r', 'g', 'b'], (k) =>
+        @player.stats[k] -= (newColor[k] / channelTotal) * WD.BONK_AMOUNT
+        @player.stats[k] = Math.max(@player.stats[k], 0)
+
+      @player.fb.child('stats').set(@player.stats)
+
       @player.fb.child('stats/roomsDug').set(@player.stats.roomsDug + 1)
+
       fbRooms.child(newPoint.toString()).set
         position: newPoint
-        color: WD.mutateColor(room.color)
+        color: newColor
         lastHarvested: 0
         creator: @player.username
 

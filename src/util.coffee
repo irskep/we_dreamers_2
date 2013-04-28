@@ -6,7 +6,7 @@ WD.ROOM_PADDING = (WD.GRID_SIZE - WD.ROOM_SIZE) / 2
 WD.DOOR_SIZE = WD.GRID_SIZE - 40
 WD.BASE_MAX_BUCKET = 300
 WD.COLOR_CHANNEL_MAX = 70
-WD.BONK_AMOUNT = 40
+WD.BONK_AMOUNT = 80
 
 WD.run = (selector) -> (new WD.GameController($(selector))).run()
 
@@ -59,7 +59,7 @@ WD.saturate = ({r, g, b}) ->
   b /= max
   [h, s, v] = WD.rgb2hsv(
     Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)).a
-  [r, g, b] = _.map Colors.hsv2rgb(h, 100, 100).a, Math.floor
+  [r, g, b] = _.map Colors.hsv2rgb(h, 75, 100).a, Math.floor
   {r, g, b}
 
 WD.cssGradientVertical = ($el, a, b) ->
