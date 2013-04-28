@@ -3027,14 +3027,21 @@
       this.fb.child('color').on('value', function(snapshot) {
         var data;
 
-        data = snapshot.val();
+        data = snapshot.val() || {
+          r: 0,
+          g: 0,
+          b: 0
+        };
         _this.color = data;
         return _this.$el.css('background-color', "rgb(" + _this.color.r + ", " + _this.color.g + ", " + _this.color.b + ")");
       });
       this.fb.child('position').on('value', function(snapshot) {
         var position, room;
 
-        position = snapshot.val();
+        position = snapshot.val() || {
+          x: 0,
+          y: 0
+        };
         room = _this.gameController.roomAtPoint(V2(position.x, position.y));
         if (_this.currentRoom !== room) {
           if (_this.currentRoom) {

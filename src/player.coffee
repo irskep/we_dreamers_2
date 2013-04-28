@@ -115,13 +115,13 @@ class WD.Player
 
   bindFirebase: ->
     @fb.child('color').on 'value', (snapshot) =>
-      data = snapshot.val()
+      data = snapshot.val() or {r: 0, g: 0, b: 0}
       @color = data
       @$el.css('background-color',
         "rgb(#{@color.r}, #{@color.g}, #{@color.b})")
 
     @fb.child('position').on 'value', (snapshot) =>
-      position = snapshot.val()
+      position = snapshot.val() or {x: 0, y: 0}
       room = @gameController.roomAtPoint(V2(position.x, position.y))
 
       if @currentRoom != room

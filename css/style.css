@@ -222,6 +222,8 @@
 
 .room-info .text {
   padding: 5px;
+  max-height: 200px;
+  overflow: scroll;
 }
 
 .room-info .text .creator {
