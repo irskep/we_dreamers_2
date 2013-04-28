@@ -221,8 +221,11 @@ class WD.GameController
       property.filter(player.isBonking.not()).onValue (v) =>
         @moveWorldContainer(k, -v)
 
-    WD.keyboard.downs('enter').filter(player.isStill).onValue =>
-      @stamp(player.currentRoom)
+    WD.keyboard.downs('j').filter(player.isStill).onValue =>
+      @stamp(player.currentRoom, true)
+
+    WD.keyboard.downs('k').filter(player.isStill).onValue =>
+      @stamp(player.currentRoom, false)
 
     fbRoomsDug = player.fb.child('stats/roomsDug')
     level2Listener = (snapshot) =>
@@ -307,11 +310,14 @@ class WD.GameController
         Math.max(
           Math.min(@player.stats[k] + value[k], @player.maxBucket()), 0))
 
-  stamp: (room) ->
+  stamp: (room, forward = true) ->
+    nextKey = @player.lastStampKey
     if room.stamp
-      nextKey = WD.nextStampKey(room.stamp.key)
+      if forward
+        nextKey = WD.nextStampKey(room.stamp.key)
+      else
+        nextKey = WD.prevStampKey(room.stamp.key)
     else
-      nextKey = @player.lastStampKey
       @player.fb.child('stats/stampsStamped').set(
         (@player.stats.stampsStamped or 0) + 1)
     @player.lastStampKey = nextKey

@@ -110,7 +110,7 @@ WD.showRoom = (player) =>
         </span>
       <% } %>
       <% if (player.level >= 3) { %>
-        <div class="stamp-room">Press Enter to stamp!</div>
+        <div class="stamp-room">Press J and K to stamp!</div>
       <% } %>
     </div>
   """

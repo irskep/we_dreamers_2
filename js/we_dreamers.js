@@ -2670,8 +2670,11 @@
           return _this.moveWorldContainer(k, -v);
         });
       });
-      WD.keyboard.downs('enter').filter(player.isStill).onValue(function() {
-        return _this.stamp(player.currentRoom);
+      WD.keyboard.downs('j').filter(player.isStill).onValue(function() {
+        return _this.stamp(player.currentRoom, true);
+      });
+      WD.keyboard.downs('k').filter(player.isStill).onValue(function() {
+        return _this.stamp(player.currentRoom, false);
       });
       fbRoomsDug = player.fb.child('stats/roomsDug');
       level2Listener = function(snapshot) {
@@ -2785,13 +2788,20 @@
       });
     };
 
-    GameController.prototype.stamp = function(room) {
+    GameController.prototype.stamp = function(room, forward) {
       var nextKey;
 
+      if (forward == null) {
+        forward = true;
+      }
+      nextKey = this.player.lastStampKey;
       if (room.stamp) {
-        nextKey = WD.nextStampKey(room.stamp.key);
+        if (forward) {
+          nextKey = WD.nextStampKey(room.stamp.key);
+        } else {
+          nextKey = WD.prevStampKey(room.stamp.key);
+        }
       } else {
-        nextKey = this.player.lastStampKey;
         this.player.fb.child('stats/stampsStamped').set((this.player.stats.stampsStamped || 0) + 1);
       }
       this.player.lastStampKey = nextKey;
@@ -3193,7 +3203,7 @@
     var $el, template, update;
 
     $el = $("<div class='room-info-container'>").appendTo('body');
-    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator && player.level > 1) { %>\n    <form class=\"fortune-form\">\n      <input name=\"fortune\" placeholder=\"Leave a note in this room\"\n       value=\"<%- fortuneText %>\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <span class=\"creator\"><%- creator %> says,</span>\n        &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n  <% if (player.level >= 3) { %>\n    <div class=\"stamp-room\">Press Enter to stamp!</div>\n  <% } %>\n</div>");
+    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator && player.level > 1) { %>\n    <form class=\"fortune-form\">\n      <input name=\"fortune\" placeholder=\"Leave a note in this room\"\n       value=\"<%- fortuneText %>\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <span class=\"creator\"><%- creator %> says,</span>\n        &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n  <% if (player.level >= 3) { %>\n    <div class=\"stamp-room\">Press J and K to stamp!</div>\n  <% } %>\n</div>");
     update = function(room) {
       var data;
 
@@ -3224,7 +3234,7 @@
 }).call(this);
 
 (function() {
-  var _sortedStampKeys, _stampKeyAfter, _stamps,
+  var _sortedStampKeys, _stampKeyAfter, _stampKeyBefore, _stamps,
     __slice = [].slice;
 
   window.WD = window.WD || {};
@@ -3398,11 +3408,13 @@
 
   _stampKeyAfter = {};
 
+  _stampKeyBefore = {};
+
   WD.stamp = function(k) {
     var letters;
 
     if (!_stamps) {
-      letters = '?!ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      letters = '?!ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ';
       _stamps = _.object(_.map(letters.split(''), function(c) {
         _sortedStampKeys.push(c);
         return [
@@ -3419,11 +3431,21 @@
         k = arguments[0], i = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
         return _stampKeyAfter[k] = _sortedStampKeys[(i + 1) % _sortedStampKeys.length];
       });
+      _stampKeyBefore = _.invert(_stampKeyAfter);
     }
     return _stamps[k];
   };
 
   WD.nextStampKey = function(k) {
+    WD.stamp(k);
+    if (_stampKeyAfter[k]) {
+      return _stampKeyAfter[k];
+    } else {
+      return 'A';
+    }
+  };
+
+  WD.prevStampKey = function(k) {
     WD.stamp(k);
     if (_stampKeyAfter[k]) {
       return _stampKeyAfter[k];
