@@ -2574,6 +2574,11 @@
             return;
           }
           _this.players[data] = new WD.Player(_this.clock, data, _this);
+          _this.players[data].midBonks.onValue(function() {
+            return soundManager.play('bonk', {
+              volume: 20
+            });
+          });
           return _this.$interactiveContainer.append(_this.players[data].$el);
         });
         fb.child('online_users').on('child_removed', function(snapshot) {
@@ -2734,12 +2739,15 @@
         $('.current-room').removeClass('current-room');
         return room.$el.addClass('current-room');
       });
-      return player.arrivedRoomProperty.filter(_.identity).map(function(room) {
+      player.arrivedRoomProperty.filter(_.identity).map(function(room) {
         return WD.colorToSoundId(room.color);
       }).skipDuplicates().onValue(function(key) {
         return soundManager.play(key, {
           volume: 50
         });
+      });
+      return player.midBonks.onValue(function() {
+        return soundManager.play('bonk');
       });
     };
 
@@ -3106,7 +3114,6 @@
       streams1.reachedDest.onValue(function() {
         var streams2;
 
-        soundManager.play('bonk');
         _this.midBonks.push(V2(x, y));
         streams2 = xyStreams(_this.clock, p2, p1, 200, easeOutQuad);
         streams2.reachedDest.onValue(function() {

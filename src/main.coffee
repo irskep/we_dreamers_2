@@ -147,6 +147,8 @@ class WD.GameController
         data = snapshot.val()
         return if data == username
         @players[data] = new WD.Player(@clock, data, this)
+        @players[data].midBonks.onValue ->
+          soundManager.play('bonk', volume: 20)
         @$interactiveContainer.append(@players[data].$el)
 
       fb.child('online_users').on 'child_removed', (snapshot) =>
@@ -281,6 +283,9 @@ class WD.GameController
       .map((room) -> WD.colorToSoundId(room.color))
       .skipDuplicates()
       .onValue (key) -> soundManager.play(key, volume: 50)
+
+    player.midBonks.onValue ->
+      soundManager.play('bonk')
 
   moveWorldContainer: (k, v) =>
     @$worldContainer.css({x: 'left', y: 'top'}[k], v)
