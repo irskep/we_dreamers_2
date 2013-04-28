@@ -3,7 +3,7 @@ module.exports = (grunt) ->
     coffee:
       main:
         files:
-          'we_dreamers.js': 'src/*.coffee',
+          'js/we_dreamers.js': 'src/*.coffee',
 
     uglify: {}
 
