@@ -2559,6 +2559,7 @@
       return WD.ensureUser(function(username) {
         var $loadingEl;
 
+        WD.showHelp();
         $loadingEl = $("<div class='status-message'>Loading...</div>").appendTo(_this.$el);
         _this.username = username;
         _this.clock = new WD.Clock();
@@ -3155,8 +3156,6 @@
 
   window.WD = window.WD || {};
 
-  WD.soundEnabled = true;
-
   _showUsernamePrompt = function(callback, isRepeat) {
     var $el, $form;
 
@@ -3246,8 +3245,8 @@
     var $el, template;
 
     $el = $("<div class='stats'>").appendTo('body');
-    template = _.template("<div class=\"stat-color stat-r\"><div class=\"color-key mono\">r</div></div>\n<div class=\"stat-color stat-g\"><div class=\"color-key mono\">g</div></div>\n<div class=\"stat-color stat-b\"><div class=\"color-key mono\">b</div></div>\n<div class=\"color-key-instructions\">\n  Press <span class=\"mono\">r</span>, <span class=\"mono\">g</span>,\n  and <span class=\"mono\">b</span> to mix what color your next room will be.\n  Your dot shows your next room's color.\n  <hr>\n</div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes written: <%- notesLeft %></div>\n<% } %>\n<% if (stampsStamped) { %>\n  <div class=\"stat-stamps-stamped\">Stamps: <%- stampsStamped %></div>\n<% } %>\n<% if (level == 1) { %>\n  <div class=\"level-instructions\">Dig rooms to reach level 2.</div>\n<% } %>\n<% if (level == 2) { %>\n  <div class=\"level-instructions\">\n    Leave notes on rooms you dug to reach level 3.\n </div>\n<% } %>\n<% if (level >= 3) { %>\n  <div class=\"stamp-instructions\">Press J and K to stamp</div>\n<% } %>");
-    return player.statsUpdates.onValue(function(data) {
+    template = _.template("<div class=\"help-button\"><a href=\"javascript:void(0);\">Help</a></div>\n<div class=\"stat-color stat-r\"><div class=\"color-key mono\">r</div></div>\n<div class=\"stat-color stat-g\"><div class=\"color-key mono\">g</div></div>\n<div class=\"stat-color stat-b\"><div class=\"color-key mono\">b</div></div>\n<div class=\"color-key-instructions\">\n  Press <span class=\"mono\">r</span>, <span class=\"mono\">g</span>,\n  and <span class=\"mono\">b</span> to mix what color your next room will be.\n  Your dot shows your next room's color.\n  <hr>\n</div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes written: <%- notesLeft %></div>\n<% } %>\n<% if (stampsStamped) { %>\n  <div class=\"stat-stamps-stamped\">Stamps: <%- stampsStamped %></div>\n<% } %>\n<% if (level == 1) { %>\n  <div class=\"level-instructions\">Dig rooms to reach level 2.</div>\n<% } %>\n<% if (level == 2) { %>\n  <div class=\"level-instructions\">\n    Leave notes on rooms you dug to reach level 3.\n </div>\n<% } %>\n<% if (level >= 3) { %>\n  <div class=\"stamp-instructions\">Press J and K to stamp</div>\n<% } %>");
+    player.statsUpdates.onValue(function(data) {
       data = _.clone(player.stats);
       data.level = player.level;
       data.notesLeft = player.stats.notesLeft || 0;
@@ -3259,6 +3258,9 @@
           'height': data[k] / 2
         });
       });
+    });
+    return $el.on('click', 'a', function() {
+      return WD.showHelp();
     });
   };
 
@@ -3298,6 +3300,18 @@
       update(room);
       return room.updates.takeUntil(player.currentRoomProperty.changes()).onValue(function() {
         return update(room);
+      });
+    });
+  };
+
+  WD.showHelp = function() {
+    var $el;
+
+    $el = $("<div class=\"wtf-container\">\n  <div class=\"wtf\">\n    <h1>Here's what's up.</h1>\n    <p>\n      This is an abstract multiplayer art piece. Things you can do:\n    </p>\n    <ol>\n      <li>Move with the arrow keys or <tt>WASD</tt>.</li>\n      <li>Harvest color with <tt>space</tt>.</li>\n      <li>Dig out new rooms by bumping into walls. You need color to do\n        this. The new room will be the color of your dot, which is affected\n        by the color in your bucket.</li>\n      <li>Leave notes on rooms (if you are level 2).</li>\n      <li>Put down big block letters (if you are level 3).</li>\n    </ol>\n    <p>\n      Watch the sidebar for how to level up.\n    </p>\n    <p>\n      Enjoy yourself...and be at peace.\n    </p>\n  </div>\n</div>").appendTo('body');
+    return _.defer(function() {
+      return $('body').one('click', function() {
+        console.log('rmove help');
+        return $el.remove();
       });
     });
   };

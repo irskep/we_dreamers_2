@@ -135,6 +135,7 @@ class WD.GameController
             autoLoad: true
 
     WD.ensureUser (username) =>
+      WD.showHelp()
       $loadingEl = $("<div class='status-message'>Loading...</div>").appendTo(@$el)
       @username = username
       @clock = new WD.Clock()

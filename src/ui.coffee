@@ -1,7 +1,5 @@
 window.WD = window.WD or {}
 
-WD.soundEnabled = true
-
 _showUsernamePrompt = (callback, isRepeat = false) ->
   $el = $("
     <div class='username-prompt-container'>
@@ -66,6 +64,7 @@ WD.ensureUser = (callback, isRepeat = false) ->
 WD.showStats = (player) =>
   $el = $("<div class='stats'>").appendTo('body')
   template = _.template """
+    <div class="help-button"><a href="javascript:void(0);">Help</a></div>
     <div class="stat-color stat-r"><div class="color-key mono">r</div></div>
     <div class="stat-color stat-g"><div class="color-key mono">g</div></div>
     <div class="stat-color stat-b"><div class="color-key mono">b</div></div>
@@ -108,6 +107,9 @@ WD.showStats = (player) =>
       $el.find(".stat-#{k}").css
         'margin-top': (player.maxBucket() - data[k]) / 2
         'height': data[k] / 2
+
+  $el.on 'click', 'a', ->
+    WD.showHelp()
 
 
 WD.showRoom = (player) =>
@@ -157,3 +159,34 @@ WD.showRoom = (player) =>
 
       room.updates.takeUntil(player.currentRoomProperty.changes()).onValue ->
         update(room)
+
+WD.showHelp = ->
+  $el = $("""
+    <div class="wtf-container">
+      <div class="wtf">
+        <h1>Here's what's up.</h1>
+        <p>
+          This is an abstract multiplayer art piece. Things you can do:
+        </p>
+        <ol>
+          <li>Move with the arrow keys or <tt>WASD</tt>.</li>
+          <li>Harvest color with <tt>space</tt>.</li>
+          <li>Dig out new rooms by bumping into walls. You need color to do
+            this. The new room will be the color of your dot, which is affected
+            by the color in your bucket.</li>
+          <li>Leave notes on rooms (if you are level 2).</li>
+          <li>Put down big block letters (if you are level 3).</li>
+        </ol>
+        <p>
+          Watch the sidebar for how to level up.
+        </p>
+        <p>
+          Enjoy yourself...and be at peace.
+        </p>
+      </div>
+    </div>
+  """).appendTo('body')
+  _.defer ->
+    $('body').one 'click', ->
+      console.log 'rmove help'
+      $el.remove()
