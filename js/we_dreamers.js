@@ -3331,7 +3331,7 @@
 
   window.WD = window.WD || {};
 
-  WD.DOOR_MARGIN = 5;
+  WD.DOOR_MARGIN = 10;
 
   WD.GRID_SIZE = 118;
 
