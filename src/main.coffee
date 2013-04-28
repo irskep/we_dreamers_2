@@ -223,10 +223,12 @@ class WD.GameController
     WD.keyboard.downs('k').filter(player.isStill).onValue =>
       @stamp(player.currentRoom, false)
 
-    _.each ['r', 'g', 'b'], (k) =>
-      WD.keyboard.downs(k).onValue =>
-        @player.fb.child('stats').child(k)
-          .set(Math.max(@player.stats[k] - 10, 0))
+    _.each ['r', 'g', 'b'], (k, i) =>
+      WD.keyboard.downs(k)
+        .merge(WD.keyboard.downs('' + (i + 1)))
+        .onValue =>
+          @player.fb.child('stats').child(k)
+            .set(Math.max(@player.stats[k] - 10, 0))
 
     fbRoomsDug = player.fb.child('stats/roomsDug')
     level2Listener = (snapshot) =>

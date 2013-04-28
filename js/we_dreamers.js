@@ -2672,8 +2672,8 @@
       WD.keyboard.downs('k').filter(player.isStill).onValue(function() {
         return _this.stamp(player.currentRoom, false);
       });
-      _.each(['r', 'g', 'b'], function(k) {
-        return WD.keyboard.downs(k).onValue(function() {
+      _.each(['r', 'g', 'b'], function(k, i) {
+        return WD.keyboard.downs(k).merge(WD.keyboard.downs('' + (i + 1))).onValue(function() {
           return _this.player.fb.child('stats').child(k).set(Math.max(_this.player.stats[k] - 10, 0));
         });
       });
