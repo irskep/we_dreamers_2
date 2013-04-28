@@ -59,7 +59,9 @@ class WD.Player
     @isBonking = @bonkBus.toProperty(false)
     @lastStampKey = '?'
 
-    @$el = $("<div class='wd-player' data-username='#{@username}'></div>")
+    @$el = $("<div class='wd-player' data-username='#{@username}'>
+      <div class='wd-player-username'>#{@username}</div>
+      </div>")
 
     @initBaconJunk()
 

@@ -73,11 +73,19 @@
   position: absolute;
   background-color: white;
   border: 1px solid #aaa;
+  overflow: visible;
 }
 
 .wd-player.you {
   border: 2px solid black;
   z-index: 1;  /* above all other players */
+}
+
+.wd-player .wd-player-username {
+  position: absolute;
+  top: 40px;
+  color: white;
+  width: 100px;
 }
 
 .wd-player.level-1 {

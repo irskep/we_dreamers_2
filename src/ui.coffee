@@ -5,7 +5,7 @@ _showUsernamePrompt = (callback, isRepeat = false) ->
     <div class='username-prompt-container'>
       <form class='username-prompt'>
         <label>Pick a username:</label>
-        <input name='username' autofocus>
+        <input maxlength=60 name='username' autofocus>
       </form>
     </div>
   ".trim()).appendTo($('body'))

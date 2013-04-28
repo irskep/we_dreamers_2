@@ -2959,7 +2959,7 @@
       this.bonkBus = new Bacon.Bus();
       this.isBonking = this.bonkBus.toProperty(false);
       this.lastStampKey = '?';
-      this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
+      this.$el = $("<div class='wd-player' data-username='" + this.username + "'>      <div class='wd-player-username'>" + this.username + "</div>      </div>");
       this.initBaconJunk();
       this.fb = fb.child('users').child(this.username);
       this.gameController.roomsAreLoaded.filter(_.identity).onValue(function() {
@@ -3169,7 +3169,7 @@
     if (isRepeat == null) {
       isRepeat = false;
     }
-    $el = $("    <div class='username-prompt-container'>      <form class='username-prompt'>        <label>Pick a username:</label>        <input name='username' autofocus>      </form>    </div>  ".trim()).appendTo($('body'));
+    $el = $("    <div class='username-prompt-container'>      <form class='username-prompt'>        <label>Pick a username:</label>        <input maxlength=60 name='username' autofocus>      </form>    </div>  ".trim()).appendTo($('body'));
     if (isRepeat) {
       $("<div>(The one you tried was taken)</div>").insertAfter($el.find('input'));
     }
