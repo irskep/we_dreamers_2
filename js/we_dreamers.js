@@ -2666,7 +2666,7 @@
         return _this.harvest(player.currentRoom);
       }), 500));
       _.each(player.positionProperties, function(property, k) {
-        return property.onValue(function(v) {
+        return property.filter(player.isBonking.not()).onValue(function(v) {
           return _this.moveWorldContainer(k, -v);
         });
       });
@@ -2864,6 +2864,8 @@
       this.statsUpdates = new Bacon.Bus();
       this.bonks = new Bacon.Bus();
       this.midBonks = new Bacon.Bus();
+      this.bonkBus = new Bacon.Bus();
+      this.isBonking = this.bonkBus.toProperty(false);
       this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
       this.initBaconJunk();
       this.fb = fb.child('users').child(this.username);
@@ -3009,6 +3011,7 @@
         return;
       }
       this.startMoving();
+      this.bonkBus.push(true);
       p1 = this.currentRoom.center();
       p2 = p1.add(V2(x, y).multiply(WD.ROOM_SIZE / 2));
       streams1 = xyStreams(this.clock, p1, p2, 200, easeInQuad);
@@ -3020,6 +3023,7 @@
         streams2.reachedDest.onValue(function() {
           _this.stopMoving();
           _this.teleportToRoom(_this.currentRoom);
+          _this.bonkBus.push(false);
           return _this.bonks.push(V2(x, y));
         });
         return _this.updateStreams(streams2);

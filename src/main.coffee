@@ -218,7 +218,7 @@ class WD.GameController
       (=> @harvest(player.currentRoom)), 500)
 
     _.each player.positionProperties, (property, k) =>
-      property.onValue (v) =>
+      property.filter(player.isBonking.not()).onValue (v) =>
         @moveWorldContainer(k, -v)
 
     fbRoomsDug = player.fb.child('stats/roomsDug')

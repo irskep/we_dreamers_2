@@ -52,6 +52,8 @@ class WD.Player
     @statsUpdates = new Bacon.Bus()
     @bonks = new Bacon.Bus()
     @midBonks = new Bacon.Bus()
+    @bonkBus = new Bacon.Bus()
+    @isBonking = @bonkBus.toProperty(false)
 
     @$el = $("<div class='wd-player' data-username='#{@username}'></div>")
 
@@ -161,6 +163,7 @@ class WD.Player
   bonk: ({x, y}) ->
     return unless @canBonk()
     @startMoving()
+    @bonkBus.push(true)
     p1 = @currentRoom.center()
     p2 = p1.add(V2(x, y).multiply(WD.ROOM_SIZE / 2))
     streams1 = xyStreams(@clock, p1, p2, 200, easeInQuad)
@@ -170,6 +173,7 @@ class WD.Player
       streams2.reachedDest.onValue =>
         @stopMoving()
         @teleportToRoom(@currentRoom)
+        @bonkBus.push(false)
         @bonks.push(V2(x, y))
       @updateStreams(streams2)
     @updateStreams(streams1)
