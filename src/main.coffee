@@ -271,4 +271,5 @@ class WD.GameController
     _.each ['r', 'g', 'b'], (k) =>
       value[k] *= 100
       @player.fb.child('stats').child(k).set(
-        Math.min(@player.stats[k] + value[k], @player.maxBucket()))
+        Math.max(
+          Math.min(@player.stats[k] + value[k], @player.maxBucket())), 0)

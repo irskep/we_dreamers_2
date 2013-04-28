@@ -2741,7 +2741,7 @@
       room.fb.child('lastHarvested').set(WD.time());
       return _.each(['r', 'g', 'b'], function(k) {
         value[k] *= 100;
-        return _this.player.fb.child('stats').child(k).set(Math.min(_this.player.stats[k] + value[k], _this.player.maxBucket()));
+        return _this.player.fb.child('stats').child(k).set(Math.max(Math.min(_this.player.stats[k] + value[k], _this.player.maxBucket())), 0);
       });
     };
 
