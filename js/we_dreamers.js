@@ -2676,6 +2676,11 @@
       WD.keyboard.downs('k').filter(player.isStill).onValue(function() {
         return _this.stamp(player.currentRoom, false);
       });
+      _.each(['r', 'g', 'b'], function(k) {
+        return WD.keyboard.downs(k).onValue(function() {
+          return _this.player.fb.child('stats').child(k).set(Math.max(_this.player.stats[k] - 10, 0));
+        });
+      });
       fbRoomsDug = player.fb.child('stats/roomsDug');
       level2Listener = function(snapshot) {
         if (player.level >= 2) {
@@ -2988,7 +2993,9 @@
       });
       this.fb.child('stats').on('value', function(snapshot) {
         _.extend(_this.stats, snapshot.val());
-        return _this.statsUpdates.push(_this.stats);
+        _this.statsUpdates.push(_this.stats);
+        _this.color = WD.saturate(_this.stats);
+        return _this.fb.child('color').set(_this.color);
       });
       this.fb.child('bonk').on('value', function(snapshot) {
         var data;
@@ -3079,11 +3086,7 @@
     };
 
     Player.prototype.canBonk = function() {
-      var _this = this;
-
-      return !_.find(['r', 'g', 'b'], function(k) {
-        return _this.stats[k] < WD.BONK_AMOUNT;
-      });
+      return this.stats.r + this.stats.g + this.stats.b >= WD.BONK_AMOUNT * 2;
     };
 
     return Player;
@@ -3354,6 +3357,23 @@
     s += _.random(-15, 15);
     s = Math.max(Math.min(s, maxSaturation * 100), minSaturation * 100);
     _ref1 = Colors.hsv2rgb(h, s, 100).a, r = _ref1[0], g = _ref1[1], b = _ref1[2];
+    return {
+      r: r,
+      g: g,
+      b: b
+    };
+  };
+
+  WD.saturate = function(_arg) {
+    var b, g, h, max, r, s, v, _ref, _ref1;
+
+    r = _arg.r, g = _arg.g, b = _arg.b;
+    max = Math.max(r, g, b);
+    r /= max;
+    g /= max;
+    b /= max;
+    _ref = WD.rgb2hsv(Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)).a, h = _ref[0], s = _ref[1], v = _ref[2];
+    _ref1 = _.map(Colors.hsv2rgb(h, 100, 100).a, Math.floor), r = _ref1[0], g = _ref1[1], b = _ref1[2];
     return {
       r: r,
       g: g,

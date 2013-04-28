@@ -129,7 +129,10 @@ class WD.Player
 
     @fb.child('stats').on 'value', (snapshot) =>
       _.extend @stats, snapshot.val()
+      # propagate the stats change to the player color so everyone can see it
       @statsUpdates.push(@stats)
+      @color = WD.saturate(@stats)
+      @fb.child('color').set(@color)
 
     @fb.child('bonk').on 'value', (snapshot) =>
       data = snapshot.val()
@@ -189,4 +192,4 @@ class WD.Player
   maxBucket: ->
     WD.BASE_MAX_BUCKET + (100 * (@level - 1))
 
-  canBonk: => not _.find ['r', 'g', 'b'], (k) => @stats[k] < WD.BONK_AMOUNT
+  canBonk: => @stats.r + @stats.g + @stats.b >= WD.BONK_AMOUNT * 2

@@ -52,6 +52,16 @@ WD.mutateColor = (c, minSaturation = 0.6, maxSaturation = 0.75) ->
   [r, g, b] = Colors.hsv2rgb(h, s, 100).a
   {r, g, b}
 
+WD.saturate = ({r, g, b}) ->
+  max = Math.max(r, g, b)
+  r /= max
+  g /= max
+  b /= max
+  [h, s, v] = WD.rgb2hsv(
+    Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)).a
+  [r, g, b] = _.map Colors.hsv2rgb(h, 100, 100).a, Math.floor
+  {r, g, b}
+
 WD.cssGradientVertical = ($el, a, b) ->
   if WD.useFirefoxGradients
     $el.css('background', 
