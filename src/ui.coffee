@@ -118,8 +118,8 @@ WD.showRoom = (player) =>
     <div class="room-info">
       <% if (player.username == creator && player.level > 1) { %>
         <form class="fortune-form">
-          <input name="fortune" placeholder="Leave a note in this room"
-           value="<%- fortuneText %>">
+          <textarea name="fortune"><%- fortuneText %></textarea>
+          <input type="submit" value="Leave note">
         </form>
       <% } else { %>
         <div class="text">
@@ -146,7 +146,7 @@ WD.showRoom = (player) =>
       .onValue (e) ->
         e.preventDefault()
         isNew = !room.fortuneText
-        room.fb.child('fortuneText').set($el.find('input').val())
+        room.fb.child('fortuneText').set($el.find('textarea').val())
         if isNew
           player.fb.child('stats/notesLeft').set(
             (player.stats.notesLeft or 0) + 1)

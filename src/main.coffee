@@ -357,7 +357,7 @@ class WD.GameController
     value = room.currentValue()
     room.fb.child('lastHarvested').set(WD.time())
     _.each ['r', 'g', 'b'], (k) =>
-      value[k] *= (60 + @player.level * 10)
+      value[k] *= (65 + @player.level * 5)
       @player.fb.child('stats').child(k).set(
         Math.max(
           Math.min(@player.stats[k] + value[k], @player.maxBucket()), 0))

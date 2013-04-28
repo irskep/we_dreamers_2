@@ -2843,7 +2843,7 @@
       value = room.currentValue();
       room.fb.child('lastHarvested').set(WD.time());
       return _.each(['r', 'g', 'b'], function(k) {
-        value[k] *= 60 + _this.player.level * 10;
+        value[k] *= 65 + _this.player.level * 5;
         return _this.player.fb.child('stats').child(k).set(Math.max(Math.min(_this.player.stats[k] + value[k], _this.player.maxBucket()), 0));
       });
     };
@@ -3276,7 +3276,7 @@
     var $el, template, update;
 
     $el = $("<div class='room-info-container'>").appendTo('body');
-    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator && player.level > 1) { %>\n    <form class=\"fortune-form\">\n      <input name=\"fortune\" placeholder=\"Leave a note in this room\"\n       value=\"<%- fortuneText %>\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <span class=\"creator\"><%- creator %> says,</span>\n        &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n</div>");
+    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator && player.level > 1) { %>\n    <form class=\"fortune-form\">\n      <textarea name=\"fortune\"><%- fortuneText %></textarea>\n      <input type=\"submit\" value=\"Leave note\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <span class=\"creator\"><%- creator %> says,</span>\n        &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n</div>");
     update = function(room) {
       var data;
 
@@ -3294,7 +3294,7 @@
 
         e.preventDefault();
         isNew = !room.fortuneText;
-        room.fb.child('fortuneText').set($el.find('input').val());
+        room.fb.child('fortuneText').set($el.find('textarea').val());
         if (isNew) {
           player.fb.child('stats/notesLeft').set((player.stats.notesLeft || 0) + 1);
         }
