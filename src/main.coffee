@@ -272,4 +272,4 @@ class WD.GameController
       value[k] *= 100
       @player.fb.child('stats').child(k).set(
         Math.max(
-          Math.min(@player.stats[k] + value[k], @player.maxBucket())), 0)
+          Math.min(@player.stats[k] + value[k], @player.maxBucket()), 0))
