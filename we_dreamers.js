@@ -2474,48 +2474,33 @@
           console.log('initializing rooms');
           fbRoomZero.set({
             position: center,
-            color: {
-              r: 30,
-              g: 0,
-              b: 0
-            },
-            lastHarvested: 0
+            color: WD.colorFromHSV(0, 75, 100),
+            lastHarvested: 0,
+            creator: "Steve"
           });
           fbRooms.child(top.toString()).set({
             position: top,
-            color: {
-              r: 30,
-              g: 30,
-              b: 0
-            },
-            lastHarvested: 0
+            color: WD.colorFromHSV(60, 75, 100),
+            lastHarvested: 0,
+            creator: "Steve"
           });
           fbRooms.child(bottom.toString()).set({
             position: bottom,
-            color: {
-              r: 0,
-              g: 0,
-              b: 30
-            },
-            lastHarvested: 0
+            color: WD.colorFromHSV(120, 75, 100),
+            lastHarvested: 0,
+            creator: "Steve"
           });
           fbRooms.child(left.toString()).set({
             position: left,
-            color: {
-              r: 0,
-              g: 30,
-              b: 30
-            },
-            lastHarvested: 0
+            color: WD.colorFromHSV(180, 75, 100),
+            lastHarvested: 0,
+            creator: "Steve"
           });
           fbRooms.child(right.toString()).set({
             position: right,
-            color: {
-              r: 0,
-              g: 30,
-              b: 0
-            },
-            lastHarvested: 0
+            color: WD.colorFromHSV(240, 75, 100),
+            lastHarvested: 0,
+            creator: "Steve"
           });
           return _.each([[center, right], [left, center], [top, center], [center, bottom]], function(_arg) {
             var a, b;
@@ -2722,7 +2707,8 @@
         fbRooms.child(newPoint.toString()).set({
           position: newPoint,
           color: WD.mutateColor(room.color),
-          lastHarvested: 0
+          lastHarvested: 0,
+          creator: this.player.username
         });
       }
       if (!this.adjacentRoom(room, dGridPoint)) {
@@ -2743,7 +2729,7 @@
     };
 
     GameController.prototype.harvest = function(room) {
-      var strength,
+      var value,
         _this = this;
 
       if (!_.find(['r', 'g', 'b'], function(k) {
@@ -2751,10 +2737,11 @@
       })) {
         return;
       }
-      strength = WD.growiness(room.lastHarvested);
+      value = room.currentValue();
       room.fb.child('lastHarvested').set(WD.time());
       return _.each(['r', 'g', 'b'], function(k) {
-        return _this.player.fb.child('stats').child(k).set(Math.min(_this.player.stats[k] + room.color[k] * strength, _this.player.maxBucket()));
+        value[k] *= 100;
+        return _this.player.fb.child('stats').child(k).set(Math.min(_this.player.stats[k] + value[k], _this.player.maxBucket()));
       });
     };
 
@@ -2950,10 +2937,11 @@
 
       this.currentRoom = room;
       p = this.currentRoom.center();
-      return this.updateStreams({
+      this.updateStreams({
         x: Bacon.constant(p.x),
         y: Bacon.constant(p.y)
       });
+      return console.log(WD.mutateColor(this.currentRoom.color));
     };
 
     Player.prototype.walkToRoom = function(room) {
@@ -2985,10 +2973,7 @@
       streams1.reachedDest.onValue(function() {
         var streams2;
 
-        _this.midBonks.push({
-          x: x,
-          y: y
-        });
+        _this.midBonks.push(V2(x, y));
         streams2 = xyStreams(_this.clock, p2, p1, 200, easeOutQuad);
         streams2.reachedDest.onValue(function() {
           _this.stopMoving();
@@ -3165,6 +3150,17 @@
     return "(" + (Math.floor(x + 50 / 100)) + ", " + (Math.floor(y + 50 / 100)) + ")";
   };
 
+  WD.colorFromHSV = function(h, s, v) {
+    var b, g, r, _ref;
+
+    _ref = Colors.hsv2rgb(h, s, v).a, r = _ref[0], g = _ref[1], b = _ref[2];
+    return {
+      r: r,
+      g: g,
+      b: b
+    };
+  };
+
   WD.subtractiveColor = function(r, g, b, fraction) {
     var c, floor;
 
@@ -3181,25 +3177,65 @@
     return "rgb(" + (c(r)) + ", " + (c(g)) + ", " + (c(b)) + ")";
   };
 
-  WD.mutateColor = function(c) {
-    var newColor, strength;
+  WD.lightenedColor = function(color, fraction) {
+    var b, g, r;
 
-    newColor = {
-      r: c.r + _.random(-30, 30),
-      g: c.g + _.random(-30, 30),
-      b: c.b + _.random(-30, 30)
+    if (fraction == null) {
+      fraction = 1;
+    }
+    fraction = 1 - fraction;
+    r = color.r + Math.floor((255 - color.r) * fraction);
+    g = color.g + Math.floor((255 - color.g) * fraction);
+    b = color.b + Math.floor((255 - color.b) * fraction);
+    return "rgb(" + r + ", " + g + ", " + b + ")";
+  };
+
+  WD.rgb2hsv = function(r, g, b) {
+    return Colors.hex2hsv(Colors.rgb2hex(r, g, b));
+  };
+
+  WD.valueOfColor = function(c, minSaturation, maxSaturation) {
+    var h, s, total, v, value, _ref;
+
+    if (minSaturation == null) {
+      minSaturation = 0.6;
+    }
+    if (maxSaturation == null) {
+      maxSaturation = 0.75;
+    }
+    _ref = WD.rgb2hsv(c.r, c.g, c.b).a, h = _ref[0], s = _ref[1], v = _ref[2];
+    value = (s / 100 - minSaturation) / (maxSaturation - minSaturation);
+    total = c.r + c.g + c.b;
+    return {
+      r: value * (c.r / total),
+      g: value * (c.g / total),
+      b: value * (c.b / total)
     };
-    _.each(['r', 'g', 'b'], function(k) {
-      return newColor[k] = Math.floor(Math.min(Math.max(newColor[k], 0), WD.COLOR_CHANNEL_MAX));
-    });
-    strength = newColor.r + newColor.g + newColor.b;
-    if (strength < 50) {
-      return WD.mutateColor(c);
+  };
+
+  WD.mutateColor = function(c, minSaturation, maxSaturation) {
+    var b, g, h, r, s, v, _ref, _ref1;
+
+    if (minSaturation == null) {
+      minSaturation = 0.6;
     }
-    if (strength > 150) {
-      return WD.mutateColor(c);
+    if (maxSaturation == null) {
+      maxSaturation = 0.75;
     }
-    return newColor;
+    console.log('mutating', c);
+    _ref = WD.rgb2hsv(c.r, c.g, c.b).a, h = _ref[0], s = _ref[1], v = _ref[2];
+    console.log('got', h, s, v);
+    h = (h + _.random(-30, 30) + 360) % 360;
+    console.log('new hue is', h);
+    s += _.random(-15, 15);
+    s = Math.max(Math.min(s, maxSaturation * 100), minSaturation * 100);
+    console.log('new saturation is', h);
+    _ref1 = Colors.hsv2rgb(h, s, 100).a, r = _ref1[0], g = _ref1[1], b = _ref1[2];
+    return {
+      r: r,
+      g: g,
+      b: b
+    };
   };
 
   WD.cssGradientVertical = function($el, a, b) {
@@ -3298,8 +3334,12 @@
     }
 
     Room.prototype.updateColor = function() {
-      this.cssColor = WD.subtractiveColor(this.color.r, this.color.g, this.color.b, WD.growiness(this.lastHarvested));
+      this.cssColor = WD.lightenedColor(this.color, WD.growiness(this.lastHarvested));
       return this.$el.css('background-color', this.cssColor);
+    };
+
+    Room.prototype.currentValue = function() {
+      return WD.valueOfColor(this.color, WD.growiness(this.lastHarvested));
     };
 
     Room.prototype.center = function() {
@@ -3424,7 +3464,11 @@
         var b, g, r, strength;
 
         r = _arg.r, g = _arg.g, b = _arg.b, strength = _arg.strength;
-        return WD.subtractiveColor(r, g, b, strength);
+        return WD.lightenedColor({
+          r: r,
+          g: g,
+          b: b
+        }, strength);
       };
       if (this.direction === 'vertical') {
         return WD.cssGradientVertical(this.$el, c(this.color1), c(this.color2));

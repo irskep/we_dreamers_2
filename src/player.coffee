@@ -137,6 +137,7 @@ class WD.Player
     @currentRoom = room
     p = @currentRoom.center()
     @updateStreams(x: Bacon.constant(p.x), y: Bacon.constant(p.y))
+    console.log WD.mutateColor(@currentRoom.color)
 
   walkToRoom: (room) ->
     @startMoving()
@@ -154,7 +155,7 @@ class WD.Player
     p2 = p1.add(V2(x, y).multiply(WD.ROOM_SIZE / 2))
     streams1 = xyStreams(@clock, p1, p2, 200, easeInQuad)
     streams1.reachedDest.onValue =>
-      @midBonks.push({x, y})
+      @midBonks.push(V2(x, y))
       streams2 = xyStreams(@clock, p2, p1, 200, easeOutQuad)
       streams2.reachedDest.onValue =>
         @stopMoving()

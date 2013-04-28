@@ -15,6 +15,10 @@ WD.chunkForPoint = ({x, y}) ->
   # later
   "(#{Math.floor(x + 50 / 100)}, #{Math.floor(y + 50 / 100)})"
 
+WD.colorFromHSV = (h, s, v) ->
+  [r, g, b] = Colors.hsv2rgb(h, s, v).a
+  {r, g, b}
+
 WD.subtractiveColor = (r, g, b, fraction = 1) ->
     r *= fraction
     g *= fraction
@@ -23,22 +27,34 @@ WD.subtractiveColor = (r, g, b, fraction = 1) ->
     c = (i) -> Math.floor(floor + i)
     "rgb(#{c(r)}, #{c(g)}, #{c(b)})"
 
-WD.mutateColor = (c) ->
-  # max: 100
-  # min: 30
-  newColor =
-    r: c.r + _.random(-30, 30)
-    g: c.g + _.random(-30, 30)
-    b: c.b + _.random(-30, 30)
-  _.each ['r', 'g', 'b'], (k) ->
-    newColor[k] = Math.floor(
-      Math.min(Math.max(newColor[k], 0), WD.COLOR_CHANNEL_MAX))
-  strength = newColor.r + newColor.g + newColor.b
-  if strength < 50
-    return WD.mutateColor(c)
-  if strength > 150
-    return WD.mutateColor(c)
-  return newColor
+WD.lightenedColor = (color, fraction = 1) ->
+  fraction = 1 - fraction
+  r = color.r + Math.floor((255 - color.r) * fraction)
+  g = color.g + Math.floor((255 - color.g) * fraction)
+  b = color.b + Math.floor((255 - color.b) * fraction)
+  "rgb(#{r}, #{g}, #{b})"
+
+WD.rgb2hsv = (r, g, b) ->
+  # derp.
+  Colors.hex2hsv(Colors.rgb2hex(r, g, b))
+
+WD.valueOfColor = (c, minSaturation = 0.6, maxSaturation = 0.75) ->
+  [h, s, v] = WD.rgb2hsv(c.r, c.g, c.b).a
+  value = (s / 100 - minSaturation) / (maxSaturation - minSaturation)
+  total = c.r + c.g + c.b
+  {r: value * (c.r / total), g: value * (c.g / total), b: value * (c.b / total)}
+
+WD.mutateColor = (c, minSaturation = 0.6, maxSaturation = 0.75) ->
+  console.log 'mutating', c
+  [h, s, v] = WD.rgb2hsv(c.r, c.g, c.b).a
+  console.log 'got', h, s, v
+  h = (h + _.random(-30, 30) + 360) % 360
+  console.log 'new hue is', h
+  s += _.random(-15, 15)
+  s = Math.max(Math.min(s, maxSaturation * 100), minSaturation * 100)
+  console.log 'new saturation is', h
+  [r, g, b] = Colors.hsv2rgb(h, s, 100).a
+  {r, g, b}
 
 WD.cssGradientVertical = ($el, a, b) ->
   $el.css('background',

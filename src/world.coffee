@@ -34,9 +34,11 @@ class WD.Room
       checkGrowinessAgain()
 
   updateColor: ->
-    @cssColor = WD.subtractiveColor(
-      @color.r, @color.g, @color.b, WD.growiness(@lastHarvested))
+    @cssColor = WD.lightenedColor(@color, WD.growiness(@lastHarvested))
     @$el.css('background-color', @cssColor)
+
+  currentValue: ->
+    WD.valueOfColor(@color, WD.growiness(@lastHarvested))
 
   center: ->
     V2(@gridPoint.x * WD.GRID_SIZE + WD.GRID_SIZE / 2,
@@ -109,7 +111,7 @@ class WD.Door
       top: WD.GRID_SIZE * @gridPoint1.y + 20
 
   updateColors: ->
-    c = ({r, g, b, strength}) -> WD.subtractiveColor(r, g, b, strength)
+    c = ({r, g, b, strength}) -> WD.lightenedColor({r, g, b}, strength)
     if @direction == 'vertical'
       WD.cssGradientVertical(@$el, c(@color1), c(@color2))
     else

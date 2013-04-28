@@ -61,18 +61,34 @@ class WD.GameController
       right = V2(1, 0)
       top = V2(0, -1)
       bottom = V2(0, 1)
+
       unless snapshot.val()
         console.log 'initializing rooms'
-        fbRoomZero.set(
-          {position: center, color: {r: 30, g: 0, b: 0}, lastHarvested: 0})
-        fbRooms.child(top.toString()).set(
-          {position: top, color: {r: 30, g: 30, b: 0}, lastHarvested: 0})
-        fbRooms.child(bottom.toString()).set(
-          {position: bottom, color: {r: 0, g: 0, b: 30}, lastHarvested: 0})
-        fbRooms.child(left.toString()).set(
-          {position: left, color: {r: 0, g: 30, b: 30}, lastHarvested: 0})
-        fbRooms.child(right.toString()).set(
-          {position: right, color: {r: 0, g: 30, b: 0}, lastHarvested: 0})
+        fbRoomZero.set({
+           position: center,
+           color: WD.colorFromHSV(0, 75, 100),
+           lastHarvested: 0,
+           creator: "Steve"})
+        fbRooms.child(top.toString()).set({
+           position: top,
+           color: WD.colorFromHSV(60, 75, 100),
+           lastHarvested: 0,
+           creator: "Steve"})
+        fbRooms.child(bottom.toString()).set({
+           position: bottom,
+           color: WD.colorFromHSV(120, 75, 100),
+           lastHarvested: 0,
+           creator: "Steve"})
+        fbRooms.child(left.toString()).set({
+           position: left,
+           color: WD.colorFromHSV(180, 75, 100),
+           lastHarvested: 0,
+           creator: "Steve"})
+        fbRooms.child(right.toString()).set({
+           position: right,
+           color: WD.colorFromHSV(240, 75, 100),
+           lastHarvested: 0,
+           creator: "Steve"})
 
         _.each [
           [center, right], [left, center], [top, center], [center, bottom]
@@ -232,6 +248,7 @@ class WD.GameController
         position: newPoint
         color: WD.mutateColor(room.color)
         lastHarvested: 0
+        creator: @player.username
 
     unless @adjacentRoom(room, dGridPoint)
       if dGridPoint.x + dGridPoint.y > 1
@@ -248,10 +265,10 @@ class WD.GameController
   harvest: (room) ->
     return unless _.find(['r', 'g', 'b'], (k) =>
       @player.stats[k] < @player.maxBucket()
-      )
-    strength = WD.growiness(room.lastHarvested)
+    )
+    value = room.currentValue()
     room.fb.child('lastHarvested').set(WD.time())
     _.each ['r', 'g', 'b'], (k) =>
+      value[k] *= 100
       @player.fb.child('stats').child(k).set(
-        Math.min(@player.stats[k] + room.color[k] * strength,
-                 @player.maxBucket()))
+        Math.min(@player.stats[k] + value[k], @player.maxBucket()))
