@@ -72,6 +72,7 @@ WD.colorToSoundId = (c) ->
   WD.SOUNDS[i]
 
 WD.cssGradientVertical = ($el, a, b) ->
+  $el.css('background-color', '#eee')
   if WD.useFirefoxGradients
     $el.css('background', 
       "-moz-linear-gradient(top, #{a} 0%, #{b} 100%)")
@@ -80,6 +81,7 @@ WD.cssGradientVertical = ($el, a, b) ->
       "-webkit-gradient(linear, left top, left bottom, from(#{a}), to(#{b}))")
 
 WD.cssGradientHorizontal = ($el, a, b) ->
+  $el.css('background-color', '#eee')
   if WD.useFirefoxGradients
     $el.css('background', 
       "-moz-linear-gradient(left, #{a} 0%, #{b} 100%)")

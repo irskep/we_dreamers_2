@@ -4,6 +4,7 @@ window.fb = (new Firebase('https://we-dreamers.firebaseio.com/LD26'))
 
 # hax
 WD.useFirefoxGradients = false
+WD.useSafariGradients = false
 
 class WD.Clock
 
@@ -16,6 +17,7 @@ class WD.Clock
       WD.useFirefoxGradients = true
     unless raf
       raf = window.webkitRequestAnimationFrame
+      WD.useSafariGradients = true
     animate = (t) =>
       @t = t
       @tick.push(t)

@@ -2391,6 +2391,8 @@
 
   WD.useFirefoxGradients = false;
 
+  WD.useSafariGradients = false;
+
   WD.Clock = (function() {
     function Clock() {
       var animate, raf,
@@ -2404,6 +2406,7 @@
       }
       if (!raf) {
         raf = window.webkitRequestAnimationFrame;
+        WD.useSafariGradients = true;
       }
       animate = function(t) {
         _this.t = t;
@@ -3478,6 +3481,7 @@
   };
 
   WD.cssGradientVertical = function($el, a, b) {
+    $el.css('background-color', '#eee');
     if (WD.useFirefoxGradients) {
       return $el.css('background', "-moz-linear-gradient(top, " + a + " 0%, " + b + " 100%)");
     } else {
@@ -3486,6 +3490,7 @@
   };
 
   WD.cssGradientHorizontal = function($el, a, b) {
+    $el.css('background-color', '#eee');
     if (WD.useFirefoxGradients) {
       return $el.css('background', "-moz-linear-gradient(left, " + a + " 0%, " + b + " 100%)");
     } else {
