@@ -137,7 +137,6 @@ class WD.Player
     @currentRoom = room
     p = @currentRoom.center()
     @updateStreams(x: Bacon.constant(p.x), y: Bacon.constant(p.y))
-    console.log WD.mutateColor(@currentRoom.color)
 
   walkToRoom: (room) ->
     @startMoving()

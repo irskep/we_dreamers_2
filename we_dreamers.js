@@ -2937,11 +2937,10 @@
 
       this.currentRoom = room;
       p = this.currentRoom.center();
-      this.updateStreams({
+      return this.updateStreams({
         x: Bacon.constant(p.x),
         y: Bacon.constant(p.y)
       });
-      return console.log(WD.mutateColor(this.currentRoom.color));
     };
 
     Player.prototype.walkToRoom = function(room) {
@@ -3136,7 +3135,7 @@
 
   WD.COLOR_CHANNEL_MAX = 70;
 
-  WD.BONK_AMOUNT = 70;
+  WD.BONK_AMOUNT = 40;
 
   WD.run = function(selector) {
     return (new WD.GameController($(selector))).run();
