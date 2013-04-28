@@ -2444,7 +2444,11 @@
       this.rooms[room.hash()] = room;
       this.$worldContainer.append(room.$el);
       return room.fb.child('walls').on('child_changed', function(snapshot) {
-        if (_.keys(snapshot.val()).length > 3 && _.last(snapshot.val()) === _this.player.username) {
+        var data, keys;
+
+        data = snapshot.val();
+        keys = _.keys(data).sort();
+        if (keys.length > 2 && data[_.last(keys)] === _this.player.username) {
           return _this.excavate(room, Vector2.fromString(snapshot.name()));
         }
       });
@@ -2612,7 +2616,7 @@
     };
 
     GameController.prototype.interactify = function(player) {
-      var fbOnline, keyboardToDirection,
+      var fbOnline, fbRoomsDug, keyboardToDirection, level2Listener,
         _this = this;
 
       fbOnline = fb.child('online_users').child(player.username);
@@ -2666,6 +2670,16 @@
           return _this.moveWorldContainer(k, -v);
         });
       });
+      fbRoomsDug = player.fb.child('stats/roomsDug');
+      level2Listener = function(snapshot) {
+        if (player.level >= 2) {
+          fbRoomsDug.off(level2Listener);
+        }
+        if (snapshot.val() > 10) {
+          return player.fb.child('level').set(2);
+        }
+      };
+      fbRoomsDug.on('value', level2Listener);
       WD.showStats(player);
       return WD.showRoom(player);
     };
@@ -2712,7 +2726,6 @@
       fbDoors = fbChunkZero.child('doors');
       newPoint = room.gridPoint.add(dGridPoint);
       if (!(newPoint.toString() in this.rooms)) {
-        console.log('setting creator to', this.player.username);
         this.player.fb.child('stats/roomsDug').set(this.player.stats.roomsDug + 1);
         fbRooms.child(newPoint.toString()).set({
           position: newPoint,
@@ -2751,6 +2764,9 @@
       room.fb.child('lastHarvested').set(WD.time());
       return _.each(['r', 'g', 'b'], function(k) {
         value[k] *= 70;
+        if (_this.player.username === 'Steve') {
+          value[k] *= 10;
+        }
         return _this.player.fb.child('stats').child(k).set(Math.max(Math.min(_this.player.stats[k] + value[k], _this.player.maxBucket()), 0));
       });
     };

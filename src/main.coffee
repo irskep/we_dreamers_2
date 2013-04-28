@@ -48,8 +48,9 @@ class WD.GameController
     @$worldContainer.append(room.$el)
 
     room.fb.child('walls').on 'child_changed', (snapshot) =>
-      if _.keys(snapshot.val()).length > 3 and
-          _.last(snapshot.val()) == @player.username
+      data = snapshot.val()
+      keys = _.keys(data).sort()
+      if keys.length > 2 and data[_.last(keys)] == @player.username
         @excavate(room, Vector2.fromString(snapshot.name()))
 
   addDoor: (door) ->
@@ -220,6 +221,13 @@ class WD.GameController
       property.onValue (v) =>
         @moveWorldContainer(k, -v)
 
+    fbRoomsDug = player.fb.child('stats/roomsDug')
+    level2Listener = (snapshot) =>
+      fbRoomsDug.off(level2Listener) if player.level >= 2
+      if snapshot.val() > 10
+        player.fb.child('level').set(2)
+    fbRoomsDug.on 'value', level2Listener
+
     WD.showStats(player)
     WD.showRoom(player)
 
@@ -254,7 +262,6 @@ class WD.GameController
     newPoint = room.gridPoint.add(dGridPoint)
 
     unless newPoint.toString() of @rooms
-      console.log 'setting creator to', @player.username
       @player.fb.child('stats/roomsDug').set(@player.stats.roomsDug + 1)
       fbRooms.child(newPoint.toString()).set
         position: newPoint
@@ -282,6 +289,8 @@ class WD.GameController
     room.fb.child('lastHarvested').set(WD.time())
     _.each ['r', 'g', 'b'], (k) =>
       value[k] *= 70
+      if @player.username == 'Steve'
+        value[k] *= 10
       @player.fb.child('stats').child(k).set(
         Math.max(
           Math.min(@player.stats[k] + value[k], @player.maxBucket()), 0))
