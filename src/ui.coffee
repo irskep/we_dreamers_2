@@ -191,5 +191,4 @@ WD.showHelp = ->
   """).appendTo('body')
   _.defer ->
     $('body').one 'click', ->
-      console.log 'rmove help'
       $el.remove()

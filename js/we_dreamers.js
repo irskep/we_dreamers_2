@@ -3310,7 +3310,6 @@
     $el = $("<div class=\"wtf-container\">\n  <div class=\"wtf\">\n    <h1>Here's what's up.</h1>\n    <p>\n      This is an abstract multiplayer art piece. Things you can do:\n    </p>\n    <ol>\n      <li>Move with the arrow keys or <tt>WASD</tt>.</li>\n      <li>Harvest color with <tt>space</tt>.</li>\n      <li>Dig out new rooms by bumping into walls. You need color to do\n        this. The new room will be the color of your dot, which is affected\n        by the color in your bucket.</li>\n      <li>Dump color with <tt>r</tt>, <tt>g</tt>, and <tt>b</tt> (or\n        <tt>1</tt>, <tt>2</tt>, and <tt>3</tt>) to change the color of\n        your dot.</li>\n      <li>Leave notes on rooms (if you are level 2).</li>\n      <li>Put down big block letters (if you are level 3).</li>\n    </ol>\n    <p>\n      Watch the sidebar for how to level up.\n    </p>\n    <p>\n      Enjoy yourself...and be at peace.\n    </p>\n  </div>\n</div>").appendTo('body');
     return _.defer(function() {
       return $('body').one('click', function() {
-        console.log('rmove help');
         return $el.remove();
       });
     });
