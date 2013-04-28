@@ -3331,11 +3331,11 @@
 
   window.WD = window.WD || {};
 
-  WD.DOOR_MARGIN = 8;
+  WD.DOOR_MARGIN = 5;
 
   WD.GRID_SIZE = 118;
 
-  WD.ROOM_SIZE = 104;
+  WD.ROOM_SIZE = 108;
 
   WD.ROOM_PADDING = (WD.GRID_SIZE - WD.ROOM_SIZE) / 2;
 
