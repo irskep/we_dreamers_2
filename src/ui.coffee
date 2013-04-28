@@ -174,6 +174,9 @@ WD.showHelp = ->
           <li>Dig out new rooms by bumping into walls. You need color to do
             this. The new room will be the color of your dot, which is affected
             by the color in your bucket.</li>
+          <li>Dump color with <tt>r</tt>, <tt>g</tt>, and <tt>b</tt> (or
+            <tt>1</tt>, <tt>2</tt>, and <tt>3</tt>) to change the color of
+            your dot.</li>
           <li>Leave notes on rooms (if you are level 2).</li>
           <li>Put down big block letters (if you are level 3).</li>
         </ol>
