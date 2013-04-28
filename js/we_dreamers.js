@@ -3370,7 +3370,7 @@
 
   window.WD = window.WD || {};
 
-  GROW_TIME = 1000 * 20;
+  GROW_TIME = 1000 * 30;
 
   WD.growiness = function(t) {
     if (t == null) {
