@@ -2649,6 +2649,7 @@
       fbOnline = fb.child('online_users').child(player.username);
       fbOnline.set(player.username);
       fbOnline.onDisconnect().remove();
+      player.$el.find('.wd-player-username').remove();
       this.$worldContainer.asEventStream('click', '.wd-room').onValue(function(e) {
         var gridPoint;
 

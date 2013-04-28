@@ -203,6 +203,8 @@ class WD.GameController
     fbOnline.set(player.username)
     fbOnline.onDisconnect().remove()
 
+    player.$el.find('.wd-player-username').remove()
+
     @$worldContainer.asEventStream('click', '.wd-room').onValue (e) =>
       gridPoint = V2($(e.target).data('gridX'), $(e.target).data('gridY'))
       @clickRoom(@roomAtPoint(gridPoint))
