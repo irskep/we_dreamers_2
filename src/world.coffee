@@ -131,7 +131,7 @@ class WD.Door
     @$el = $("<div class='wd-door #{@type}'></div>").css
       width: WD.DOOR_SIZE
       height: WD.ROOM_PADDING * 2
-      left: WD.GRID_SIZE * @gridPoint1.x + 20
+      left: WD.GRID_SIZE * @gridPoint1.x + WD.DOOR_MARGIN
       top: @gridPoint1.y * WD.GRID_SIZE + WD.GRID_SIZE - WD.ROOM_PADDING
 
   initHorizontal: ->
@@ -140,7 +140,7 @@ class WD.Door
       width: WD.ROOM_PADDING * 2
       height: WD.DOOR_SIZE
       left: @gridPoint2.x * WD.GRID_SIZE - WD.ROOM_PADDING
-      top: WD.GRID_SIZE * @gridPoint1.y + 20
+      top: WD.GRID_SIZE * @gridPoint1.y + WD.DOOR_MARGIN
 
   updateColors: ->
     c = ({r, g, b, strength}) -> WD.lightenedColor({r, g, b}, strength)

@@ -3331,13 +3331,15 @@
 
   window.WD = window.WD || {};
 
+  WD.DOOR_MARGIN = 8;
+
   WD.GRID_SIZE = 118;
 
   WD.ROOM_SIZE = 104;
 
   WD.ROOM_PADDING = (WD.GRID_SIZE - WD.ROOM_SIZE) / 2;
 
-  WD.DOOR_SIZE = WD.GRID_SIZE - 40;
+  WD.DOOR_SIZE = WD.GRID_SIZE - WD.DOOR_MARGIN * 2;
 
   WD.BASE_MAX_BUCKET = 300;
 
@@ -3767,7 +3769,7 @@
       return this.$el = $("<div class='wd-door " + this.type + "'></div>").css({
         width: WD.DOOR_SIZE,
         height: WD.ROOM_PADDING * 2,
-        left: WD.GRID_SIZE * this.gridPoint1.x + 20,
+        left: WD.GRID_SIZE * this.gridPoint1.x + WD.DOOR_MARGIN,
         top: this.gridPoint1.y * WD.GRID_SIZE + WD.GRID_SIZE - WD.ROOM_PADDING
       });
     };
@@ -3778,7 +3780,7 @@
         width: WD.ROOM_PADDING * 2,
         height: WD.DOOR_SIZE,
         left: this.gridPoint2.x * WD.GRID_SIZE - WD.ROOM_PADDING,
-        top: WD.GRID_SIZE * this.gridPoint1.y + 20
+        top: WD.GRID_SIZE * this.gridPoint1.y + WD.DOOR_MARGIN
       });
     };
 
