@@ -2731,6 +2731,11 @@
       var strength,
         _this = this;
 
+      if (!_.find(['r', 'g', 'b'], function(k) {
+        return _this.player.stats[k] < _this.player.maxBucket();
+      })) {
+        return;
+      }
       strength = WD.growiness(room.lastHarvested);
       room.fb.child('lastHarvested').set(WD.time());
       return _.each(['r', 'g', 'b'], function(k) {

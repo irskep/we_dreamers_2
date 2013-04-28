@@ -232,6 +232,9 @@ class WD.GameController
           type: 'basic'
 
   harvest: (room) ->
+    return unless _.find(['r', 'g', 'b'], (k) =>
+      @player.stats[k] < @player.maxBucket()
+      )
     strength = WD.growiness(room.lastHarvested)
     room.fb.child('lastHarvested').set(WD.time())
     _.each ['r', 'g', 'b'], (k) =>
