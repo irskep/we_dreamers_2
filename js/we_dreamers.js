@@ -2538,7 +2538,7 @@
       soundManager.setup({
         url: 'swf/',
         preferFlash: false,
-        debugMode: false,
+        debugMode: true,
         onready: function() {
           soundManager.createSound({
             id: 'bonk',

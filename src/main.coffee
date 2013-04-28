@@ -119,7 +119,7 @@ class WD.GameController
       url: 'swf/',
       # optional: prefer HTML5 over Flash for MP3/MP4
       preferFlash: false,
-      debugMode: false,
+      debugMode: true,
       onready: ->
         soundManager.createSound
           id: 'bonk'
