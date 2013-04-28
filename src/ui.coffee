@@ -68,10 +68,10 @@ WD.showStats = (player) =>
     <div class="stat-color stat-g"> </div>
     <div class="stat-color stat-b"> </div>
   """
-  player.fb.child('stats').on 'value', (snapshot) ->
-    data = snapshot.val()
+  player.statsUpdates.onValue (data) ->
+    data = player.stats
     $el.html(template(data))
     _.each ['r', 'g', 'b'], (k) ->
       $el.find(".stat-#{k}").css
-        'margin-top': WD.MAX_BUCKET - data[k]
-        'height': data[k]
+        'margin-top': (player.maxBucket() - data[k]) / 2
+        'height': data[k] / 2

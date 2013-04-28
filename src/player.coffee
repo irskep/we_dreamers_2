@@ -44,6 +44,8 @@ class WD.Player
       g: 0
       b: 0
     @currentRoom = null
+    @level = 1
+    @statsUpdates = new Bacon.Bus()
 
     @$el = $("<div class='wd-player' data-username='#{@username}'></div>")
 
@@ -117,12 +119,17 @@ class WD.Player
           @teleportToRoom(room)
 
     _.each _.keys(@stats), (k) =>
-      @fb.child('stats').child(k).on 'value', (snapshot) =>
-        @stats[k] = snapshot.val() or 0
+      @fb.child('stats').on 'value', (snapshot) =>
+        _.extend @stats, snapshot.val()
+        @statsUpdates.push(@stats)
 
     @fb.child('bonk').on 'value', (snapshot) =>
       data = snapshot.val()
       @bonk(data) if data
+
+    @fb.child('level').on 'value', (snapshot) =>
+      @level = snapshot.val() or 1
+      @statsUpdates.push(@stats)
 
   teleportToRoom: (room) ->
     @currentRoom = room
@@ -158,3 +165,6 @@ class WD.Player
     @fb.child('color').off('value')
     @fb.child('position').off('value')
     @fb.child('bonk').off('value')
+
+  maxBucket: ->
+    WD.BASE_MAX_BUCKET + (100 * (@level - 1))

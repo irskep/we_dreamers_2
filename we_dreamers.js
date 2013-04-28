@@ -2734,7 +2734,7 @@
       strength = WD.growiness(room.lastHarvested);
       room.fb.child('lastHarvested').set(WD.time());
       return _.each(['r', 'g', 'b'], function(k) {
-        return _this.player.fb.child('stats').child(k).set(Math.min(_this.player.stats[k] + room.color[k] * strength, WD.MAX_BUCKET));
+        return _this.player.fb.child('stats').child(k).set(Math.min(_this.player.stats[k] + room.color[k] * strength, _this.player.maxBucket()));
       });
     };
 
@@ -2814,6 +2814,8 @@
         b: 0
       };
       this.currentRoom = null;
+      this.level = 1;
+      this.statsUpdates = new Bacon.Bus();
       this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
       this.initBaconJunk();
       this.fb = fb.child('users').child(this.username);
@@ -2900,17 +2902,22 @@
         }
       });
       _.each(_.keys(this.stats), function(k) {
-        return _this.fb.child('stats').child(k).on('value', function(snapshot) {
-          return _this.stats[k] = snapshot.val() || 0;
+        return _this.fb.child('stats').on('value', function(snapshot) {
+          _.extend(_this.stats, snapshot.val());
+          return _this.statsUpdates.push(_this.stats);
         });
       });
-      return this.fb.child('bonk').on('value', function(snapshot) {
+      this.fb.child('bonk').on('value', function(snapshot) {
         var data;
 
         data = snapshot.val();
         if (data) {
           return _this.bonk(data);
         }
+      });
+      return this.fb.child('level').on('value', function(snapshot) {
+        _this.level = snapshot.val() || 1;
+        return _this.statsUpdates.push(_this.stats);
       });
     };
 
@@ -2968,6 +2975,10 @@
       this.fb.child('color').off('value');
       this.fb.child('position').off('value');
       return this.fb.child('bonk').off('value');
+    };
+
+    Player.prototype.maxBucket = function() {
+      return WD.BASE_MAX_BUCKET + (100 * (this.level - 1));
     };
 
     return Player;
@@ -3072,15 +3083,13 @@
 
     $el = $("<div class='stats'>").appendTo('body');
     template = _.template("<div class=\"stat-color stat-r\"> </div>\n<div class=\"stat-color stat-g\"> </div>\n<div class=\"stat-color stat-b\"> </div>");
-    return player.fb.child('stats').on('value', function(snapshot) {
-      var data;
-
-      data = snapshot.val();
+    return player.statsUpdates.onValue(function(data) {
+      data = player.stats;
       $el.html(template(data));
       return _.each(['r', 'g', 'b'], function(k) {
         return $el.find(".stat-" + k).css({
-          'margin-top': WD.MAX_BUCKET - data[k],
-          'height': data[k]
+          'margin-top': (player.maxBucket() - data[k]) / 2,
+          'height': data[k] / 2
         });
       });
     });
@@ -3099,7 +3108,7 @@
 
   WD.DOOR_SIZE = WD.GRID_SIZE - 40;
 
-  WD.MAX_BUCKET = 300;
+  WD.BASE_MAX_BUCKET = 300;
 
   WD.COLOR_CHANNEL_MAX = 70;
 
