@@ -55,7 +55,7 @@ class WD.GameController
     fbRooms = fbChunkZero.child('rooms')
     fbDoors = fbChunkZero.child('doors')
     fbRoomZero = fbRooms.child(V2(0, 0).toString())
-    fbRoomZero.on 'value', (snapshot) =>
+    fbRoomZero.once 'value', (snapshot) =>
       center = V2(0, 0)
       left = V2(-1, 0)
       right = V2(1, 0)
@@ -66,7 +66,7 @@ class WD.GameController
         console.log 'initializing rooms'
         fbRoomZero.set({
            position: center,
-           color: WD.colorFromHSV(0, 75, 100),
+           color: WD.colorFromHSV(120, 75, 100),
            lastHarvested: 0,
            creator: "Steve"})
         fbRooms.child(top.toString()).set({
@@ -76,7 +76,7 @@ class WD.GameController
            creator: "Steve"})
         fbRooms.child(bottom.toString()).set({
            position: bottom,
-           color: WD.colorFromHSV(120, 75, 100),
+           color: WD.colorFromHSV(0, 75, 100),
            lastHarvested: 0,
            creator: "Steve"})
         fbRooms.child(left.toString()).set({

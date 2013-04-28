@@ -2462,7 +2462,7 @@
       fbRooms = fbChunkZero.child('rooms');
       fbDoors = fbChunkZero.child('doors');
       fbRoomZero = fbRooms.child(V2(0, 0).toString());
-      return fbRoomZero.on('value', function(snapshot) {
+      return fbRoomZero.once('value', function(snapshot) {
         var bottom, center, left, right, top;
 
         center = V2(0, 0);
@@ -2474,7 +2474,7 @@
           console.log('initializing rooms');
           fbRoomZero.set({
             position: center,
-            color: WD.colorFromHSV(0, 75, 100),
+            color: WD.colorFromHSV(120, 75, 100),
             lastHarvested: 0,
             creator: "Steve"
           });
@@ -2486,7 +2486,7 @@
           });
           fbRooms.child(bottom.toString()).set({
             position: bottom,
-            color: WD.colorFromHSV(120, 75, 100),
+            color: WD.colorFromHSV(0, 75, 100),
             lastHarvested: 0,
             creator: "Steve"
           });
