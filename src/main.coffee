@@ -113,6 +113,27 @@ class WD.GameController
     @roomsAreLoaded = @roomsLoadedBus.toProperty(false)
     @players = {}
     @$worldContainer.hide()
+
+    soundManager.setup
+      # where to find flash audio SWFs, as needed
+      url: 'swf/',
+      # optional: prefer HTML5 over Flash for MP3/MP4
+      preferFlash: false,
+      debugMode: false,
+      onready: ->
+        soundManager.createSound
+          id: 'bonk'
+          url: 'audio/bonk.wav'
+          multiShot: true
+          autoLoad: true
+
+        _.each WD.SOUNDS, (s) ->
+          soundManager.createSound
+            id: s
+            url: "audio/#{s}.mp3"
+            multiShot: true
+            autoLoad: true
+
     WD.ensureUser (username) =>
       $loadingEl = $("<div class='status-message'>Loading...</div>").appendTo(@$el)
       @username = username
@@ -252,9 +273,14 @@ class WD.GameController
     WD.showStats(player)
     WD.showRoom(player)
 
-    player.currentRoomProperty.filter(_.identity).onValue (room) =>
+    player.arrivedRoomProperty.filter(_.identity).onValue (room) =>
       $('.current-room').removeClass('current-room')
       room.$el.addClass('current-room')
+
+    player.arrivedRoomProperty.filter(_.identity)
+      .map((room) -> WD.colorToSoundId(room.color))
+      .skipDuplicates()
+      .onValue (key) -> soundManager.play(key, volume: 50)
 
   moveWorldContainer: (k, v) =>
     @$worldContainer.css({x: 'left', y: 'top'}[k], v)

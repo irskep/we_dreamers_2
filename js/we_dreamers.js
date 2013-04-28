@@ -2535,6 +2535,27 @@
       this.roomsAreLoaded = this.roomsLoadedBus.toProperty(false);
       this.players = {};
       this.$worldContainer.hide();
+      soundManager.setup({
+        url: 'swf/',
+        preferFlash: false,
+        debugMode: false,
+        onready: function() {
+          soundManager.createSound({
+            id: 'bonk',
+            url: 'audio/bonk.wav',
+            multiShot: true,
+            autoLoad: true
+          });
+          return _.each(WD.SOUNDS, function(s) {
+            return soundManager.createSound({
+              id: s,
+              url: "audio/" + s + ".mp3",
+              multiShot: true,
+              autoLoad: true
+            });
+          });
+        }
+      });
       return WD.ensureUser(function(username) {
         var $loadingEl;
 
@@ -2709,9 +2730,16 @@
       fbNotesLeft.on('value', level3Listener);
       WD.showStats(player);
       WD.showRoom(player);
-      return player.currentRoomProperty.filter(_.identity).onValue(function(room) {
+      player.arrivedRoomProperty.filter(_.identity).onValue(function(room) {
         $('.current-room').removeClass('current-room');
         return room.$el.addClass('current-room');
+      });
+      return player.arrivedRoomProperty.filter(_.identity).map(function(room) {
+        return WD.colorToSoundId(room.color);
+      }).skipDuplicates().onValue(function(key) {
+        return soundManager.play(key, {
+          volume: 50
+        });
       });
     };
 
@@ -2912,6 +2940,8 @@
       };
       this.currentRoom = null;
       this.currentRoomBus = new Bacon.Bus();
+      this.arrivedBus = new Bacon.Bus();
+      this.arrivedRoomProperty = this.arrivedBus.toProperty(null);
       this.currentRoomProperty = this.currentRoomBus.skipDuplicates().toProperty(null);
       this.level = 1;
       this.statsUpdates = new Bacon.Bus();
@@ -3054,7 +3084,8 @@
       this.currentRoomBus.push(room);
       streams.reachedDest.onValue(function() {
         _this.stopMoving();
-        return _this.teleportToRoom(room);
+        _this.teleportToRoom(room);
+        return _this.arrivedBus.push(room);
       });
       return this.updateStreams(streams);
     };
@@ -3075,6 +3106,7 @@
       streams1.reachedDest.onValue(function() {
         var streams2;
 
+        soundManager.play('bonk');
         _this.midBonks.push(V2(x, y));
         streams2 = xyStreams(_this.clock, p2, p1, 200, easeOutQuad);
         streams2.reachedDest.onValue(function() {
@@ -3115,6 +3147,8 @@
     _this = this;
 
   window.WD = window.WD || {};
+
+  WD.soundEnabled = true;
 
   _showUsernamePrompt = function(callback, isRepeat) {
     var $el, $form;
@@ -3283,6 +3317,8 @@
 
   WD.BONK_AMOUNT = 80;
 
+  WD.SOUNDS = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'a2', 'b2', 'c2'];
+
   WD.run = function(selector) {
     return (new WD.GameController($(selector))).run();
   };
@@ -3394,6 +3430,18 @@
       g: g,
       b: b
     };
+  };
+
+  WD.colorToSoundId = function(c) {
+    var bucketSize, h, i, s, v, _ref;
+
+    _ref = WD.rgb2hsv(c.r, c.g, c.b).a, h = _ref[0], s = _ref[1], v = _ref[2];
+    bucketSize = 360 / WD.SOUNDS.length;
+    i = Math.floor(h / bucketSize);
+    if (!WD.SOUNDS[i]) {
+      debugger;
+    }
+    return WD.SOUNDS[i];
   };
 
   WD.cssGradientVertical = function($el, a, b) {

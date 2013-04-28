@@ -1,5 +1,7 @@
 window.WD = window.WD or {}
 
+WD.soundEnabled = true
+
 _showUsernamePrompt = (callback, isRepeat = false) ->
   $el = $("
     <div class='username-prompt-container'>
@@ -87,6 +89,7 @@ WD.showStats = (player) =>
       <div class="stamp-instructions">Press J and K to stamp</div>
     <% } %>
   """
+
   player.statsUpdates.onValue (data) ->
     data = _.clone player.stats
     data.level = player.level

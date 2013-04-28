@@ -7,6 +7,7 @@ WD.DOOR_SIZE = WD.GRID_SIZE - 40
 WD.BASE_MAX_BUCKET = 300
 WD.COLOR_CHANNEL_MAX = 70
 WD.BONK_AMOUNT = 80
+WD.SOUNDS = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'a2', 'b2', 'c2']
 
 WD.run = (selector) -> (new WD.GameController($(selector))).run()
 
@@ -61,6 +62,13 @@ WD.saturate = ({r, g, b}) ->
     Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)).a
   [r, g, b] = _.map Colors.hsv2rgb(h, 75, 100).a, Math.floor
   {r, g, b}
+
+WD.colorToSoundId = (c) ->
+  [h, s, v] = WD.rgb2hsv(c.r, c.g, c.b).a
+  bucketSize = 360 / WD.SOUNDS.length
+  i = Math.floor(h / bucketSize)
+  debugger unless WD.SOUNDS[i]
+  WD.SOUNDS[i]
 
 WD.cssGradientVertical = ($el, a, b) ->
   if WD.useFirefoxGradients
