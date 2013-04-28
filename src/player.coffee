@@ -44,6 +44,8 @@ class WD.Player
       g: 0
       b: 0
     @currentRoom = null
+    @currentRoomBus = new Bacon.Bus()
+    @currentRoomProperty = @currentRoomBus.skipDuplicates().toProperty(null)
     @level = 1
     @statsUpdates = new Bacon.Bus()
     @bonks = new Bacon.Bus()
@@ -135,14 +137,15 @@ class WD.Player
 
   teleportToRoom: (room) ->
     @currentRoom = room
+    @currentRoomBus.push(room)
     p = @currentRoom.center()
     @updateStreams(x: Bacon.constant(p.x), y: Bacon.constant(p.y))
-    console.log room.creator
 
   walkToRoom: (room) ->
     @startMoving()
     streams = xyStreams(@clock, @positionData, room.center(), 500)
     @currentRoom = room
+    @currentRoomBus.push(room)
     streams.reachedDest.onValue =>
       @stopMoving()
       @teleportToRoom(room)

@@ -75,3 +75,45 @@ WD.showStats = (player) =>
       $el.find(".stat-#{k}").css
         'margin-top': (player.maxBucket() - data[k]) / 2
         'height': data[k] / 2
+
+
+WD.showRoom = (player) =>
+  $el = $("<div class='room-info-container'>").appendTo('body')
+  template = _.template """
+    <div class="room-info">
+      <% if (player.username == creator) { %>
+        <form class="fortune-form">
+          <input name="fortune" placeholder="Leave a note in this room"
+           value="<%- fortuneText %>">
+        </form>
+      <% } else { %>
+        <div class="text">
+          <% if (fortuneText) { %>
+            <%- creator %> says, &ldquo;<%- fortuneText %>&rdquo;
+          <% } else { %>
+            Dug by <%- creator %>
+          <% } %>
+        </span>
+      <% } %>
+    </div>
+  """
+
+  update = (room) ->
+    data = _.clone(room)
+    data.player = player
+    data.fortuneText = data.fortuneText or ''
+    $el.html(template(data))
+
+  player.currentRoomProperty.onValue (room) ->
+    return unless room
+    update(room)
+    console.log room.fortuneText
+
+    room.updates.takeUntil(player.currentRoomProperty.changes()).onValue ->
+      update(room)
+
+    $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes())
+      .onValue (e) ->
+        e.preventDefault()
+        room.fb.child('fortuneText').set($el.find('input').val())
+        false

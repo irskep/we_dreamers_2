@@ -219,6 +219,7 @@ class WD.GameController
         @moveWorldContainer(k, -v)
 
     WD.showStats(player)
+    WD.showRoom(player)
 
   moveWorldContainer: (k, v) =>
     @$worldContainer.css({x: 'left', y: 'top'}[k], v)

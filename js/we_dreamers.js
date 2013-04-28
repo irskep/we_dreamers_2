@@ -2666,7 +2666,8 @@
           return _this.moveWorldContainer(k, -v);
         });
       });
-      return WD.showStats(player);
+      WD.showStats(player);
+      return WD.showRoom(player);
     };
 
     GameController.prototype.moveWorldContainer = function(k, v) {
@@ -2830,6 +2831,8 @@
         b: 0
       };
       this.currentRoom = null;
+      this.currentRoomBus = new Bacon.Bus();
+      this.currentRoomProperty = this.currentRoomBus.skipDuplicates().toProperty(null);
       this.level = 1;
       this.statsUpdates = new Bacon.Bus();
       this.bonks = new Bacon.Bus();
@@ -2943,12 +2946,12 @@
       var p;
 
       this.currentRoom = room;
+      this.currentRoomBus.push(room);
       p = this.currentRoom.center();
-      this.updateStreams({
+      return this.updateStreams({
         x: Bacon.constant(p.x),
         y: Bacon.constant(p.y)
       });
-      return console.log(room.creator);
     };
 
     Player.prototype.walkToRoom = function(room) {
@@ -2958,6 +2961,7 @@
       this.startMoving();
       streams = xyStreams(this.clock, this.positionData, room.center(), 500);
       this.currentRoom = room;
+      this.currentRoomBus.push(room);
       streams.reachedDest.onValue(function() {
         _this.stopMoving();
         return _this.teleportToRoom(room);
@@ -3122,6 +3126,36 @@
           'margin-top': (player.maxBucket() - data[k]) / 2,
           'height': data[k] / 2
         });
+      });
+    });
+  };
+
+  WD.showRoom = function(player) {
+    var $el, template, update;
+
+    $el = $("<div class='room-info-container'>").appendTo('body');
+    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator) { %>\n    <form class=\"fortune-form\">\n      <input name=\"fortune\" placeholder=\"Leave a note in this room\"\n       value=\"<%- fortuneText %>\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <%- creator %> says, &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n</div>");
+    update = function(room) {
+      var data;
+
+      data = _.clone(room);
+      data.player = player;
+      data.fortuneText = data.fortuneText || '';
+      return $el.html(template(data));
+    };
+    return player.currentRoomProperty.onValue(function(room) {
+      if (!room) {
+        return;
+      }
+      update(room);
+      console.log(room.fortuneText);
+      room.updates.takeUntil(player.currentRoomProperty.changes()).onValue(function() {
+        return update(room);
+      });
+      return $el.asEventStream('submit').takeUntil(player.currentRoomProperty.changes()).onValue(function(e) {
+        e.preventDefault();
+        room.fb.child('fortuneText').set($el.find('input').val());
+        return false;
       });
     });
   };
@@ -3324,13 +3358,20 @@
         left: this.gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING,
         top: this.gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING
       });
+      this.updates = new Bacon.Bus();
       this.fb = fb.child('chunks/(0, 0)/rooms').child(this.hash());
       this.fb.child('creator').on('value', function(snapshot) {
-        return _this.creator = snapshot.val();
+        _this.creator = snapshot.val();
+        return _this.updates.push(_this);
+      });
+      this.fb.child('fortuneText').on('value', function(snapshot) {
+        _this.fortuneText = snapshot.val();
+        return _this.updates.push(_this);
       });
       this.fb.child('color').on('value', function(snapshot) {
         _this.color = snapshot.val();
-        return _this.updateColor();
+        _this.updateColor();
+        return _this.updates.push(_this);
       });
       this.fb.child('lastHarvested').on('value', function(snapshot) {
         var checkGrowinessAgain;
@@ -3343,7 +3384,8 @@
             return setTimeout(checkGrowinessAgain, 300);
           }
         };
-        return checkGrowinessAgain();
+        checkGrowinessAgain();
+        return _this.updates.push(_this);
       });
     }
 

@@ -83,6 +83,8 @@
   border-right: 2px solid black;
   border-bottom: 2px solid black;
   border-bottom-right-radius: 5px;
+  overflow: visible;
+  max-height: 100%;
 }
 
 .stat-color {
@@ -102,6 +104,32 @@
 
 .stat-b {
   background-color: #04a;
+}
+
+.room-info-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.room-info {
+  margin: auto;
+  background-color: white;
+  border: 2px solid black;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  height: 50px;
+  width: 400px;
+}
+
+.room-info .text {
+  padding: 5px 0 0 5px;
+}
+
+.fortune-form input {
+  width: calc(100% - 6px);
 }
 
 .clearfix {

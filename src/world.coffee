@@ -17,14 +17,22 @@ class WD.Room
       left: @gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING
       top: @gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING
 
+    @updates = new Bacon.Bus()
+
     @fb = fb.child('chunks/(0, 0)/rooms').child(@hash())
 
     @fb.child('creator').on 'value', (snapshot) =>
       @creator = snapshot.val()
+      @updates.push(this)
+
+    @fb.child('fortuneText').on 'value', (snapshot) =>
+      @fortuneText = snapshot.val()
+      @updates.push(this)
 
     @fb.child('color').on 'value', (snapshot) =>
       @color = snapshot.val()
       @updateColor()
+      @updates.push(this)
 
     @fb.child('lastHarvested').on 'value', (snapshot) =>
       @lastHarvested = snapshot.val() or 0
@@ -35,6 +43,7 @@ class WD.Room
         if WD.growiness(@lastHarvested) < 1
           setTimeout checkGrowinessAgain, 300
       checkGrowinessAgain()
+      @updates.push(this)
 
   updateColor: ->
     @cssColor = WD.lightenedColor(@color, WD.growiness(@lastHarvested))
