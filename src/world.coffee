@@ -1,6 +1,6 @@
 window.WD = window.WD or {}
 
-GROW_TIME = 1000 * 5
+GROW_TIME = 1000 * 20
 WD.growiness = (t = 0) -> Math.min((WD.time() - t) / GROW_TIME, 1)
 
 class WD.Room
