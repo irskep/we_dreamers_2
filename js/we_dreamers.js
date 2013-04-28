@@ -3134,7 +3134,7 @@
     var $el, template;
 
     $el = $("<div class='stats'>").appendTo('body');
-    template = _.template("<div class=\"stat-color stat-r\"> </div>\n<div class=\"stat-color stat-g\"> </div>\n<div class=\"stat-color stat-b\"> </div>\n<div class=\"stat-level\">Level <%- level %></div>\n<div class=\"stat-rooms-dug\">Rooms Dug: <%- roomsDug %></div>");
+    template = _.template("<div class=\"stat-color stat-r\"> </div>\n<div class=\"stat-color stat-g\"> </div>\n<div class=\"stat-color stat-b\"> </div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms Dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes left: <%- notesLeft %></div>\n<% } %>");
     return player.statsUpdates.onValue(function(data) {
       data = _.clone(player.stats);
       data.level = player.level;

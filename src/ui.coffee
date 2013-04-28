@@ -68,7 +68,12 @@ WD.showStats = (player) =>
     <div class="stat-color stat-g"> </div>
     <div class="stat-color stat-b"> </div>
     <div class="stat-level">Level <%- level %></div>
-    <div class="stat-rooms-dug">Rooms Dug: <%- roomsDug %></div>
+    <% if (roomsDug) { %>
+      <div class="stat-rooms-dug">Rooms Dug: <%- roomsDug %></div>
+    <% } %>
+    <% if (notesLeft) { %>
+      <div class="stat-notes-left">Notes left: <%- notesLeft %></div>
+    <% } %>
   """
   player.statsUpdates.onValue (data) ->
     data = _.clone player.stats
