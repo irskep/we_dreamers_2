@@ -2675,7 +2675,7 @@
         if (player.level >= 2) {
           fbRoomsDug.off(level2Listener);
         }
-        if (snapshot.val() > 10) {
+        if (snapshot.val() >= 10) {
           return player.fb.child('level').set(2);
         }
       };

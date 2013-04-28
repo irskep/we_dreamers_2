@@ -224,7 +224,7 @@ class WD.GameController
     fbRoomsDug = player.fb.child('stats/roomsDug')
     level2Listener = (snapshot) =>
       fbRoomsDug.off(level2Listener) if player.level >= 2
-      if snapshot.val() > 10
+      if snapshot.val() >= 10
         player.fb.child('level').set(2)
     fbRoomsDug.on 'value', level2Listener
 
