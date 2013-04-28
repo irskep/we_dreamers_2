@@ -46,6 +46,8 @@ class WD.Player
     @currentRoom = null
     @level = 1
     @statsUpdates = new Bacon.Bus()
+    @bonks = new Bacon.Bus()
+    @midBonks = new Bacon.Bus()
 
     @$el = $("<div class='wd-player' data-username='#{@username}'></div>")
 
@@ -146,16 +148,18 @@ class WD.Player
     @updateStreams(streams)
 
   bonk: ({x, y}) ->
+    return unless @canBonk()
     @startMoving()
     p1 = @currentRoom.center()
     p2 = p1.add(V2(x, y).multiply(WD.ROOM_SIZE / 2))
     streams1 = xyStreams(@clock, p1, p2, 200, easeInQuad)
     streams1.reachedDest.onValue =>
-      @gameController.weaken(@currentRoom, V2(x, y))
+      @midBonks.push({x, y})
       streams2 = xyStreams(@clock, p2, p1, 200, easeOutQuad)
       streams2.reachedDest.onValue =>
         @stopMoving()
         @teleportToRoom(@currentRoom)
+        @bonks.push(V2(x, y))
       @updateStreams(streams2)
     @updateStreams(streams1)
 
@@ -168,3 +172,5 @@ class WD.Player
 
   maxBucket: ->
     WD.BASE_MAX_BUCKET + (100 * (@level - 1))
+
+  canBonk: => not _.find ['r', 'g', 'b'], (k) => @stats[k] < WD.BONK_AMOUNT

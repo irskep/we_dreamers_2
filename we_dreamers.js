@@ -2431,8 +2431,15 @@
     }
 
     GameController.prototype.addRoom = function(room) {
+      var _this = this;
+
       this.rooms[room.hash()] = room;
-      return this.$worldContainer.append(room.$el);
+      this.$worldContainer.append(room.$el);
+      return room.fb.child('walls').on('child_changed', function(snapshot) {
+        if (_.keys(snapshot.val()).length > 3) {
+          return _this.excavate(room, Vector2.fromString(snapshot.name()));
+        }
+      });
     };
 
     GameController.prototype.addDoor = function(door) {
@@ -2636,10 +2643,18 @@
             return player.fb.child('position').set(nextRoom().gridPoint);
           }
         });
-        return WD.keyboard.downs(keyName).filter(player.isStill).onValue(function() {
+        return WD.keyboard.downs(keyName).filter(player.isStill).filter(player.canBonk).onValue(function() {
           if (!nextRoom()) {
             player.fb.child('bonk').set(vector);
-            return player.fb.child('bonk').set(null);
+            player.fb.child('bonk').set(null);
+            return player.midBonks.take(1).onValue(function(dGridPoint) {
+              _this.weaken(player.currentRoom, dGridPoint);
+              return _this.player.fb.child('stats').set({
+                r: _this.player.stats['r'] - WD.BONK_AMOUNT,
+                g: _this.player.stats['g'] - WD.BONK_AMOUNT,
+                b: _this.player.stats['b'] - WD.BONK_AMOUNT
+              });
+            });
           }
         });
       };
@@ -2750,7 +2765,8 @@
 }).call(this);
 
 (function() {
-  var easeInQuad, easeOutQuad, lerp, xyStreams;
+  var easeInQuad, easeOutQuad, lerp, xyStreams,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   window.WD = window.WD || {};
 
@@ -2812,6 +2828,7 @@
       this.clock = clock;
       this.username = username;
       this.gameController = gameController;
+      this.canBonk = __bind(this.canBonk, this);
       this.gridPosition = V2(0, 0);
       this.stats = {
         r: 0,
@@ -2821,6 +2838,8 @@
       this.currentRoom = null;
       this.level = 1;
       this.statsUpdates = new Bacon.Bus();
+      this.bonks = new Bacon.Bus();
+      this.midBonks = new Bacon.Bus();
       this.$el = $("<div class='wd-player' data-username='" + this.username + "'></div>");
       this.initBaconJunk();
       this.fb = fb.child('users').child(this.username);
@@ -2956,6 +2975,9 @@
         _this = this;
 
       x = _arg.x, y = _arg.y;
+      if (!this.canBonk()) {
+        return;
+      }
       this.startMoving();
       p1 = this.currentRoom.center();
       p2 = p1.add(V2(x, y).multiply(WD.ROOM_SIZE / 2));
@@ -2963,11 +2985,15 @@
       streams1.reachedDest.onValue(function() {
         var streams2;
 
-        _this.gameController.weaken(_this.currentRoom, V2(x, y));
+        _this.midBonks.push({
+          x: x,
+          y: y
+        });
         streams2 = xyStreams(_this.clock, p2, p1, 200, easeOutQuad);
         streams2.reachedDest.onValue(function() {
           _this.stopMoving();
-          return _this.teleportToRoom(_this.currentRoom);
+          _this.teleportToRoom(_this.currentRoom);
+          return _this.bonks.push(V2(x, y));
         });
         return _this.updateStreams(streams2);
       });
@@ -2984,6 +3010,14 @@
 
     Player.prototype.maxBucket = function() {
       return WD.BASE_MAX_BUCKET + (100 * (this.level - 1));
+    };
+
+    Player.prototype.canBonk = function() {
+      var _this = this;
+
+      return !_.find(['r', 'g', 'b'], function(k) {
+        return _this.stats[k] < WD.BONK_AMOUNT;
+      });
     };
 
     return Player;
@@ -3117,6 +3151,8 @@
 
   WD.COLOR_CHANNEL_MAX = 70;
 
+  WD.BONK_AMOUNT = 70;
+
   WD.run = function(selector) {
     return (new WD.GameController($(selector))).run();
   };
@@ -3242,11 +3278,6 @@
         top: this.gridPoint.y * WD.GRID_SIZE + WD.ROOM_PADDING
       });
       this.fb = fb.child('chunks/(0, 0)/rooms').child(this.hash());
-      this.fb.child('walls').on('child_changed', function(snapshot) {
-        if (_.keys(snapshot.val()).length > 3) {
-          return _this.gameController.excavate(_this, Vector2.fromString(snapshot.name()));
-        }
-      });
       this.fb.child('color').on('value', function(snapshot) {
         _this.color = snapshot.val();
         return _this.updateColor();

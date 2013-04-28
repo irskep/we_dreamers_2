@@ -39,6 +39,10 @@ class WD.GameController
     @rooms[room.hash()] = room
     @$worldContainer.append(room.$el)
 
+    room.fb.child('walls').on 'child_changed', (snapshot) =>
+      if _.keys(snapshot.val()).length > 3
+        @excavate(room, Vector2.fromString(snapshot.name()))
+
   addDoor: (door) ->
     @doors[door.hash1()] = [] unless door.hash1() of @doors
     @doors[door.hash2()] = [] unless door.hash2() of @doors
@@ -161,10 +165,20 @@ class WD.GameController
         .onValue =>
           if nextRoom()
             player.fb.child('position').set(nextRoom().gridPoint)
-      WD.keyboard.downs(keyName).filter(player.isStill).onValue =>
-        unless nextRoom()
-          player.fb.child('bonk').set(vector)
-          player.fb.child('bonk').set(null)
+      WD.keyboard.downs(keyName)
+        .filter(player.isStill)
+        .filter(player.canBonk)
+        .onValue =>
+          unless nextRoom()
+            player.fb.child('bonk').set(vector)
+            player.fb.child('bonk').set(null)
+            player.midBonks.take(1).onValue (dGridPoint) =>
+              @weaken(player.currentRoom, dGridPoint)
+              @player.fb.child('stats').set
+                r: @player.stats['r'] - WD.BONK_AMOUNT
+                g: @player.stats['g'] - WD.BONK_AMOUNT
+                b: @player.stats['b'] - WD.BONK_AMOUNT
+
     keyboardToDirection('left', V2(-1, 0))
     keyboardToDirection('right', V2(1, 0))
     keyboardToDirection('up', V2(0, -1))

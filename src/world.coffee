@@ -19,10 +19,6 @@ class WD.Room
 
     @fb = fb.child('chunks/(0, 0)/rooms').child(@hash())
 
-    @fb.child('walls').on 'child_changed', (snapshot) =>
-      if _.keys(snapshot.val()).length > 3
-        @gameController.excavate(this, Vector2.fromString(snapshot.name()))
-
     @fb.child('color').on 'value', (snapshot) =>
       @color = snapshot.val()
       @updateColor()

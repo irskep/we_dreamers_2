@@ -6,6 +6,7 @@ WD.ROOM_PADDING = (WD.GRID_SIZE - WD.ROOM_SIZE) / 2
 WD.DOOR_SIZE = WD.GRID_SIZE - 40
 WD.BASE_MAX_BUCKET = 300
 WD.COLOR_CHANNEL_MAX = 70
+WD.BONK_AMOUNT = 70
 
 WD.run = (selector) -> (new WD.GameController($(selector))).run()
 
