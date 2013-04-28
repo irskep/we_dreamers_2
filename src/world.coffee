@@ -10,7 +10,9 @@ class WD.Room
         <div class='wd-room rounded-rect'
           data-grid-x='#{@gridPoint.x}'
           data-grid-y='#{@gridPoint.y}'
-        ></div>
+        >
+          <div class='nw'></div>
+        </div>
       ".trim()).css
       width: WD.ROOM_SIZE
       height: WD.ROOM_SIZE
@@ -27,6 +29,10 @@ class WD.Room
 
     @fb.child('fortuneText').on 'value', (snapshot) =>
       @fortuneText = snapshot.val()
+      if @fortuneText
+        @$el.find('.nw').html('&ldquo; &rdquo;')
+      else
+        @$el.find('.nw').html('')
       @updates.push(this)
 
     @fb.child('color').on 'value', (snapshot) =>

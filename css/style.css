@@ -29,6 +29,12 @@
   border-radius: 10px;
 }
 
+.wd-room .nw {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
 .wd-door {
   position: absolute;
   z-index: 3;
@@ -126,6 +132,10 @@
 
 .room-info .text {
   padding: 5px 0 0 5px;
+}
+
+.room-info .text .creator {
+  color: #999;
 }
 
 .fortune-form input {

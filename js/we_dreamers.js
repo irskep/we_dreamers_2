@@ -3134,7 +3134,7 @@
     var $el, template, update;
 
     $el = $("<div class='room-info-container'>").appendTo('body');
-    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator) { %>\n    <form class=\"fortune-form\">\n      <input name=\"fortune\" placeholder=\"Leave a note in this room\"\n       value=\"<%- fortuneText %>\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <%- creator %> says, &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n</div>");
+    template = _.template("<div class=\"room-info\">\n  <% if (player.username == creator && player.level > 1) { %>\n    <form class=\"fortune-form\">\n      <input name=\"fortune\" placeholder=\"Leave a note in this room\"\n       value=\"<%- fortuneText %>\">\n    </form>\n  <% } else { %>\n    <div class=\"text\">\n      <% if (fortuneText) { %>\n        <span class=\"creator\"><%- creator %> says,</span>\n        &ldquo;<%- fortuneText %>&rdquo;\n      <% } else { %>\n        Dug by <%- creator %>\n      <% } %>\n    </span>\n  <% } %>\n</div>");
     update = function(room) {
       var data;
 
@@ -3352,7 +3352,7 @@
       this.color = color;
       this.lastHarvested = lastHarvested;
       this.gameController = gameController;
-      this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        ></div>      ").trim()).css({
+      this.$el = $(("        <div class='wd-room rounded-rect'          data-grid-x='" + this.gridPoint.x + "'          data-grid-y='" + this.gridPoint.y + "'        >          <div class='nw'></div>        </div>      ").trim()).css({
         width: WD.ROOM_SIZE,
         height: WD.ROOM_SIZE,
         left: this.gridPoint.x * WD.GRID_SIZE + WD.ROOM_PADDING,
@@ -3366,6 +3366,11 @@
       });
       this.fb.child('fortuneText').on('value', function(snapshot) {
         _this.fortuneText = snapshot.val();
+        if (_this.fortuneText) {
+          _this.$el.find('.nw').html('&ldquo; &rdquo;');
+        } else {
+          _this.$el.find('.nw').html('');
+        }
         return _this.updates.push(_this);
       });
       this.fb.child('color').on('value', function(snapshot) {

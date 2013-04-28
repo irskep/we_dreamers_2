@@ -81,7 +81,7 @@ WD.showRoom = (player) =>
   $el = $("<div class='room-info-container'>").appendTo('body')
   template = _.template """
     <div class="room-info">
-      <% if (player.username == creator) { %>
+      <% if (player.username == creator && player.level > 1) { %>
         <form class="fortune-form">
           <input name="fortune" placeholder="Leave a note in this room"
            value="<%- fortuneText %>">
@@ -89,7 +89,8 @@ WD.showRoom = (player) =>
       <% } else { %>
         <div class="text">
           <% if (fortuneText) { %>
-            <%- creator %> says, &ldquo;<%- fortuneText %>&rdquo;
+            <span class="creator"><%- creator %> says,</span>
+            &ldquo;<%- fortuneText %>&rdquo;
           <% } else { %>
             Dug by <%- creator %>
           <% } %>
