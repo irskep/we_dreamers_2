@@ -276,6 +276,7 @@ class WD.GameController
       .push(@player.username)
 
   excavate: (room, dGridPoint) ->
+    return unless @player.canBonk()
     fbChunkZero = fb.child('chunks').child(WD.chunkForPoint(V2(0, 0)))
     fbRooms = fbChunkZero.child('rooms')
     fbDoors = fbChunkZero.child('doors')

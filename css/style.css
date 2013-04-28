@@ -129,8 +129,9 @@
 }
 
 .stat-color {
+  position: relative;
   float: left;
-  width: 20px;
+  width: 30px;
   margin-right: 10px;
 }
 
@@ -147,9 +148,34 @@
   background-color: #04a;
 }
 
+.stat-color .color-key {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  color: white;
+  text-align: center;
+  font-size: 14px;
+}
+
+.color-key-instructions {
+  width: 120px;
+  clear: both;
+  padding: 10px 10px 0 10px;
+  font-size: 12px;
+}
+
+.mono {
+  font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
+}
+
 .stat-level, .stat-rooms-dug, .stat-notes-left, .stat-stamps-stamped {
   clear: both;
   padding: 10px 10px 0 10px;
+}
+
+.stat-level {
+  padding-top: 0;
 }
 
 .room-info-container {

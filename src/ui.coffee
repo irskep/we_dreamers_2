@@ -64,9 +64,15 @@ WD.ensureUser = (callback, isRepeat = false) ->
 WD.showStats = (player) =>
   $el = $("<div class='stats'>").appendTo('body')
   template = _.template """
-    <div class="stat-color stat-r"> </div>
-    <div class="stat-color stat-g"> </div>
-    <div class="stat-color stat-b"> </div>
+    <div class="stat-color stat-r"><div class="color-key mono">r</div></div>
+    <div class="stat-color stat-g"><div class="color-key mono">g</div></div>
+    <div class="stat-color stat-b"><div class="color-key mono">b</div></div>
+    <div class="color-key-instructions">
+      Press <span class="mono">r</span>, <span class="mono">g</span>,
+      and <span class="mono">b</span> to mix what color your next room will be.
+      Your dot shows your next room's color.
+      <hr>
+    </div>
     <div class="stat-level">Level <%- level %></div>
     <% if (roomsDug) { %>
       <div class="stat-rooms-dug">Rooms dug: <%- roomsDug %></div>

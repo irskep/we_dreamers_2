@@ -2747,6 +2747,9 @@
       var channelTotal, fbChunkZero, fbDoors, fbRooms, newColor, newPoint,
         _this = this;
 
+      if (!this.player.canBonk()) {
+        return;
+      }
       fbChunkZero = fb.child('chunks').child(WD.chunkForPoint(V2(0, 0)));
       fbRooms = fbChunkZero.child('rooms');
       fbDoors = fbChunkZero.child('doors');
@@ -3194,7 +3197,7 @@
     var $el, template;
 
     $el = $("<div class='stats'>").appendTo('body');
-    template = _.template("<div class=\"stat-color stat-r\"> </div>\n<div class=\"stat-color stat-g\"> </div>\n<div class=\"stat-color stat-b\"> </div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes written: <%- notesLeft %></div>\n<% } %>\n<% if (stampsStamped) { %>\n  <div class=\"stat-stamps-stamped\">Stamps: <%- stampsStamped %></div>\n<% } %>");
+    template = _.template("<div class=\"stat-color stat-r\"><div class=\"color-key mono\">r</div></div>\n<div class=\"stat-color stat-g\"><div class=\"color-key mono\">g</div></div>\n<div class=\"stat-color stat-b\"><div class=\"color-key mono\">b</div></div>\n<div class=\"color-key-instructions\">\n  Press <span class=\"mono\">r</span>, <span class=\"mono\">g</span>,\n  and <span class=\"mono\">b</span> to mix what color your next room will be.\n  Your dot shows your next room's color.\n  <hr>\n</div>\n<div class=\"stat-level\">Level <%- level %></div>\n<% if (roomsDug) { %>\n  <div class=\"stat-rooms-dug\">Rooms dug: <%- roomsDug %></div>\n<% } %>\n<% if (notesLeft) { %>\n  <div class=\"stat-notes-left\">Notes written: <%- notesLeft %></div>\n<% } %>\n<% if (stampsStamped) { %>\n  <div class=\"stat-stamps-stamped\">Stamps: <%- stampsStamped %></div>\n<% } %>");
     return player.statsUpdates.onValue(function(data) {
       data = _.clone(player.stats);
       data.level = player.level;
