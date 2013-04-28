@@ -3321,7 +3321,7 @@
         checkGrowinessAgain = function() {
           _this.updateColor();
           if (WD.growiness(_this.lastHarvested) < 1) {
-            return setTimeout(checkGrowinessAgain, 500);
+            return setTimeout(checkGrowinessAgain, 300);
           }
         };
         return checkGrowinessAgain();
@@ -3382,18 +3382,19 @@
       this.fb = fb.child('chunks/(0, 0)/doors').child(this.gridPoint1.toString() + this.gridPoint2.toString());
       this.fbRoom1 = fb.child('chunks/(0, 0)/rooms').child(this.gridPoint1.toString());
       this.fbRoom2 = fb.child('chunks/(0, 0)/rooms').child(this.gridPoint2.toString());
+      this.lastHarvested1 = 0;
+      this.lastHarvested2 = 0;
       this.fbRoom1.on('value', function(snapshot) {
         var checkGrowinessAgain, data;
 
         data = snapshot.val();
         _this.color1 = data.color;
-        _this.color1.strength = WD.growiness(data.lastHarvested);
+        _this.lastHarvested1 = data.lastHarvested;
         _this.updateColors();
         checkGrowinessAgain = function() {
           _this.updateColors();
-          _this.color1.strength = WD.growiness(data.lastHarvested);
-          if (WD.growiness(data.lastHarvested) < 1) {
-            return setTimeout(checkGrowinessAgain, 500);
+          if (WD.growiness(_this.lastHarvested1) < 1) {
+            return setTimeout(checkGrowinessAgain, 300);
           }
         };
         return checkGrowinessAgain();
@@ -3403,12 +3404,11 @@
 
         data = snapshot.val();
         _this.color2 = data.color;
-        _this.color2.strength = WD.growiness(data.lastHarvested);
+        _this.lastHarvested2 = data.lastHarvested;
         _this.updateColors();
         checkGrowinessAgain = function() {
           _this.updateColors();
-          _this.color2.strength = WD.growiness(data.lastHarvested);
-          if (WD.growiness(data.lastHarvested) < 1) {
+          if (WD.growiness(_this.lastHarvested2) < 1) {
             return setTimeout(checkGrowinessAgain, 500);
           }
         };
@@ -3466,9 +3466,9 @@
         }, strength);
       };
       if (this.direction === 'vertical') {
-        return WD.cssGradientVertical(this.$el, c(this.color1), c(this.color2));
+        return WD.cssGradientVertical(this.$el, WD.lightenedColor(this.color1, WD.growiness(this.lastHarvested1)), WD.lightenedColor(this.color2, WD.growiness(this.lastHarvested2)));
       } else {
-        return WD.cssGradientHorizontal(this.$el, c(this.color1), c(this.color2));
+        return WD.cssGradientHorizontal(this.$el, WD.lightenedColor(this.color1, WD.growiness(this.lastHarvested1)), WD.lightenedColor(this.color2, WD.growiness(this.lastHarvested2)));
       }
     };
 

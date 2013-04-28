@@ -30,7 +30,7 @@ class WD.Room
       checkGrowinessAgain = =>
         @updateColor()
         if WD.growiness(@lastHarvested) < 1
-          setTimeout checkGrowinessAgain, 500
+          setTimeout checkGrowinessAgain, 300
       checkGrowinessAgain()
 
   updateColor: ->
@@ -63,29 +63,30 @@ class WD.Door
     @fbRoom1 = fb.child('chunks/(0, 0)/rooms').child(@gridPoint1.toString())
     @fbRoom2 = fb.child('chunks/(0, 0)/rooms').child(@gridPoint2.toString())
 
+    @lastHarvested1 = 0
+    @lastHarvested2 = 0
+
     @fbRoom1.on 'value', (snapshot) =>
       data = snapshot.val()
       @color1 = data.color
-      @color1.strength = WD.growiness(data.lastHarvested)
+      @lastHarvested1 = data.lastHarvested
       @updateColors()
 
       checkGrowinessAgain = =>
         @updateColors()
-        @color1.strength = WD.growiness(data.lastHarvested)
-        if WD.growiness(data.lastHarvested) < 1
-          setTimeout checkGrowinessAgain, 500
+        if WD.growiness(@lastHarvested1) < 1
+          setTimeout checkGrowinessAgain, 300
       checkGrowinessAgain()
 
     @fbRoom2.on 'value', (snapshot) =>
       data = snapshot.val()
       @color2 = data.color
-      @color2.strength = WD.growiness(data.lastHarvested)
+      @lastHarvested2 = data.lastHarvested
       @updateColors()
 
       checkGrowinessAgain = =>
         @updateColors()
-        @color2.strength = WD.growiness(data.lastHarvested)
-        if WD.growiness(data.lastHarvested) < 1
+        if WD.growiness(@lastHarvested2) < 1
           setTimeout checkGrowinessAgain, 500
       checkGrowinessAgain()
 
@@ -113,6 +114,12 @@ class WD.Door
   updateColors: ->
     c = ({r, g, b, strength}) -> WD.lightenedColor({r, g, b}, strength)
     if @direction == 'vertical'
-      WD.cssGradientVertical(@$el, c(@color1), c(@color2))
+      WD.cssGradientVertical(
+        @$el,
+        WD.lightenedColor(@color1, WD.growiness(@lastHarvested1)),
+        WD.lightenedColor(@color2, WD.growiness(@lastHarvested2)))
     else
-      WD.cssGradientHorizontal(@$el, c(@color1), c(@color2))
+      WD.cssGradientHorizontal(
+        @$el,
+        WD.lightenedColor(@color1, WD.growiness(@lastHarvested1)),
+        WD.lightenedColor(@color2, WD.growiness(@lastHarvested2)))
