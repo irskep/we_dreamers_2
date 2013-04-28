@@ -112,6 +112,11 @@
   background-color: #04a;
 }
 
+.stat-level, .stat-rooms-dug {
+  clear: both;
+  padding: 10px 10px 0 10px;
+}
+
 .room-info-container {
   position: absolute;
   bottom: 0;

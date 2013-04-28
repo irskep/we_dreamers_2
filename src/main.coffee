@@ -25,6 +25,7 @@ class WD.Clock
 class WD.GameController
 
   constructor: (@$el) ->
+    window.gc = this
     @$el.append($('<div class="wd-inner"></div>'))
     @$worldContainer = $('<div class="room-container"></div>')
       .appendTo(@$el.find('.wd-inner'))
@@ -47,7 +48,8 @@ class WD.GameController
     @$worldContainer.append(room.$el)
 
     room.fb.child('walls').on 'child_changed', (snapshot) =>
-      if _.keys(snapshot.val()).length > 3
+      if _.keys(snapshot.val()).length > 3 and
+          _.last(snapshot.val()) == @player.username
         @excavate(room, Vector2.fromString(snapshot.name()))
 
   addDoor: (door) ->
@@ -197,10 +199,10 @@ class WD.GameController
             player.fb.child('bonk').set(null)
             player.midBonks.take(1).onValue (dGridPoint) =>
               @weaken(player.currentRoom, dGridPoint)
-              @player.fb.child('stats').set
-                r: @player.stats['r'] - WD.BONK_AMOUNT
-                g: @player.stats['g'] - WD.BONK_AMOUNT
-                b: @player.stats['b'] - WD.BONK_AMOUNT
+              @player.stats['r'] -= WD.BONK_AMOUNT
+              @player.stats['g'] -= WD.BONK_AMOUNT
+              @player.stats['b'] -= WD.BONK_AMOUNT
+              @player.fb.child('stats').set(@player.stats)
 
     keyboardToDirection('left', V2(-1, 0))
     keyboardToDirection('right', V2(1, 0))
@@ -252,6 +254,8 @@ class WD.GameController
     newPoint = room.gridPoint.add(dGridPoint)
 
     unless newPoint.toString() of @rooms
+      console.log 'setting creator to', @player.username
+      @player.fb.child('stats/roomsDug').set(@player.stats.roomsDug + 1)
       fbRooms.child(newPoint.toString()).set
         position: newPoint
         color: WD.mutateColor(room.color)
@@ -277,7 +281,7 @@ class WD.GameController
     value = room.currentValue()
     room.fb.child('lastHarvested').set(WD.time())
     _.each ['r', 'g', 'b'], (k) =>
-      value[k] *= 100
+      value[k] *= 70
       @player.fb.child('stats').child(k).set(
         Math.max(
           Math.min(@player.stats[k] + value[k], @player.maxBucket()), 0))

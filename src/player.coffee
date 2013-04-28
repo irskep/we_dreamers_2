@@ -43,6 +43,7 @@ class WD.Player
       r: 0
       g: 0
       b: 0
+      roomsDug: 0
     @currentRoom = null
     @currentRoomBus = new Bacon.Bus()
     @currentRoomProperty = @currentRoomBus.skipDuplicates().toProperty(null)
@@ -122,10 +123,9 @@ class WD.Player
         else
           @teleportToRoom(room)
 
-    _.each _.keys(@stats), (k) =>
-      @fb.child('stats').on 'value', (snapshot) =>
-        _.extend @stats, snapshot.val()
-        @statsUpdates.push(@stats)
+    @fb.child('stats').on 'value', (snapshot) =>
+      _.extend @stats, snapshot.val()
+      @statsUpdates.push(@stats)
 
     @fb.child('bonk').on 'value', (snapshot) =>
       data = snapshot.val()

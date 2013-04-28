@@ -67,9 +67,12 @@ WD.showStats = (player) =>
     <div class="stat-color stat-r"> </div>
     <div class="stat-color stat-g"> </div>
     <div class="stat-color stat-b"> </div>
+    <div class="stat-level">Level <%- level %></div>
+    <div class="stat-rooms-dug">Rooms Dug: <%- roomsDug %></div>
   """
   player.statsUpdates.onValue (data) ->
-    data = player.stats
+    data = _.clone player.stats
+    data.level = player.level
     $el.html(template(data))
     _.each ['r', 'g', 'b'], (k) ->
       $el.find(".stat-#{k}").css
@@ -108,7 +111,6 @@ WD.showRoom = (player) =>
   player.currentRoomProperty.onValue (room) ->
     return unless room
     update(room)
-    console.log room.fortuneText
 
     room.updates.takeUntil(player.currentRoomProperty.changes()).onValue ->
       update(room)

@@ -2423,6 +2423,7 @@
       this.$el = $el;
       this.moveWorldContainer = __bind(this.moveWorldContainer, this);
       this.initBaseData = __bind(this.initBaseData, this);
+      window.gc = this;
       this.$el.append($('<div class="wd-inner"></div>'));
       this.$worldContainer = $('<div class="room-container"></div>').appendTo(this.$el.find('.wd-inner')).css({
         position: 'absolute',
@@ -2443,7 +2444,7 @@
       this.rooms[room.hash()] = room;
       this.$worldContainer.append(room.$el);
       return room.fb.child('walls').on('child_changed', function(snapshot) {
-        if (_.keys(snapshot.val()).length > 3) {
+        if (_.keys(snapshot.val()).length > 3 && _.last(snapshot.val()) === _this.player.username) {
           return _this.excavate(room, Vector2.fromString(snapshot.name()));
         }
       });
@@ -2641,11 +2642,10 @@
             player.fb.child('bonk').set(null);
             return player.midBonks.take(1).onValue(function(dGridPoint) {
               _this.weaken(player.currentRoom, dGridPoint);
-              return _this.player.fb.child('stats').set({
-                r: _this.player.stats['r'] - WD.BONK_AMOUNT,
-                g: _this.player.stats['g'] - WD.BONK_AMOUNT,
-                b: _this.player.stats['b'] - WD.BONK_AMOUNT
-              });
+              _this.player.stats['r'] -= WD.BONK_AMOUNT;
+              _this.player.stats['g'] -= WD.BONK_AMOUNT;
+              _this.player.stats['b'] -= WD.BONK_AMOUNT;
+              return _this.player.fb.child('stats').set(_this.player.stats);
             });
           }
         });
@@ -2712,6 +2712,8 @@
       fbDoors = fbChunkZero.child('doors');
       newPoint = room.gridPoint.add(dGridPoint);
       if (!(newPoint.toString() in this.rooms)) {
+        console.log('setting creator to', this.player.username);
+        this.player.fb.child('stats/roomsDug').set(this.player.stats.roomsDug + 1);
         fbRooms.child(newPoint.toString()).set({
           position: newPoint,
           color: WD.mutateColor(room.color),
@@ -2748,7 +2750,7 @@
       value = room.currentValue();
       room.fb.child('lastHarvested').set(WD.time());
       return _.each(['r', 'g', 'b'], function(k) {
-        value[k] *= 100;
+        value[k] *= 70;
         return _this.player.fb.child('stats').child(k).set(Math.max(Math.min(_this.player.stats[k] + value[k], _this.player.maxBucket()), 0));
       });
     };
@@ -2828,7 +2830,8 @@
       this.stats = {
         r: 0,
         g: 0,
-        b: 0
+        b: 0,
+        roomsDug: 0
       };
       this.currentRoom = null;
       this.currentRoomBus = new Bacon.Bus();
@@ -2922,11 +2925,9 @@
           }
         }
       });
-      _.each(_.keys(this.stats), function(k) {
-        return _this.fb.child('stats').on('value', function(snapshot) {
-          _.extend(_this.stats, snapshot.val());
-          return _this.statsUpdates.push(_this.stats);
-        });
+      this.fb.child('stats').on('value', function(snapshot) {
+        _.extend(_this.stats, snapshot.val());
+        return _this.statsUpdates.push(_this.stats);
       });
       this.fb.child('bonk').on('value', function(snapshot) {
         var data;
@@ -3117,9 +3118,10 @@
     var $el, template;
 
     $el = $("<div class='stats'>").appendTo('body');
-    template = _.template("<div class=\"stat-color stat-r\"> </div>\n<div class=\"stat-color stat-g\"> </div>\n<div class=\"stat-color stat-b\"> </div>");
+    template = _.template("<div class=\"stat-color stat-r\"> </div>\n<div class=\"stat-color stat-g\"> </div>\n<div class=\"stat-color stat-b\"> </div>\n<div class=\"stat-level\">Level <%- level %></div>\n<div class=\"stat-rooms-dug\">Rooms Dug: <%- roomsDug %></div>");
     return player.statsUpdates.onValue(function(data) {
-      data = player.stats;
+      data = _.clone(player.stats);
+      data.level = player.level;
       $el.html(template(data));
       return _.each(['r', 'g', 'b'], function(k) {
         return $el.find(".stat-" + k).css({
@@ -3148,7 +3150,6 @@
         return;
       }
       update(room);
-      console.log(room.fortuneText);
       room.updates.takeUntil(player.currentRoomProperty.changes()).onValue(function() {
         return update(room);
       });
