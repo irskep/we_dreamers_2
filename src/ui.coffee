@@ -69,7 +69,7 @@ WD.showStats = (player) =>
     <div class="stat-color stat-b"> </div>
     <div class="stat-level">Level <%- level %></div>
     <% if (roomsDug) { %>
-      <div class="stat-rooms-dug">Rooms Dug: <%- roomsDug %></div>
+      <div class="stat-rooms-dug">Rooms dug: <%- roomsDug %></div>
     <% } %>
     <% if (notesLeft) { %>
       <div class="stat-notes-left">Notes written: <%- notesLeft %></div>
