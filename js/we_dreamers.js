@@ -2402,6 +2402,9 @@
         raf = window.mozRequestAnimationFrame;
         WD.useFirefoxGradients = true;
       }
+      if (!raf) {
+        raf = window.webkitRequestAnimationFrame;
+      }
       animate = function(t) {
         _this.t = t;
         _this.tick.push(t);

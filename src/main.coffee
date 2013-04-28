@@ -14,6 +14,8 @@ class WD.Clock
     unless raf
       raf = window.mozRequestAnimationFrame
       WD.useFirefoxGradients = true
+    unless raf
+      raf = window.webkitRequestAnimationFrame
     animate = (t) =>
       @t = t
       @tick.push(t)
