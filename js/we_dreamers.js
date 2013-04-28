@@ -3331,9 +3331,9 @@
 
   window.WD = window.WD || {};
 
-  WD.GRID_SIZE = 128;
+  WD.GRID_SIZE = 118;
 
-  WD.ROOM_SIZE = 110;
+  WD.ROOM_SIZE = 104;
 
   WD.ROOM_PADDING = (WD.GRID_SIZE - WD.ROOM_SIZE) / 2;
 
