@@ -84,7 +84,7 @@ WD.showStats = (player) =>
       <div class="stat-stamps-stamped">Stamps: <%- stampsStamped %></div>
     <% } %>
     <% if (level >= 3) { %>
-      <div class="stamp-instructions">Press J and K to stamp!</div>
+      <div class="stamp-instructions">Press J and K to stamp</div>
     <% } %>
   """
   player.statsUpdates.onValue (data) ->
