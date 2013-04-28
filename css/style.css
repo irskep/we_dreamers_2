@@ -49,8 +49,8 @@
   position: absolute;
   width: 60px;
   height: 60px;
-  left: calc(50% - 30px);
-  top: calc(50% - 30px);
+  left: 24px;
+  top: 24px;
   font-size: 64px;
   overflow: visible;
   text-align: center;
