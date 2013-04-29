@@ -353,6 +353,10 @@ class WD.GameController
           room1: newPoint
           room2: room.gridPoint
           type: 'basic'
+      _.each ['r', 'g', 'b'], (k) =>
+        @player.stats[k] -= WD.BONK_AMOUNT / 2
+        @player.stats[k] = Math.max(@player.stats[k], 0)
+        @player.fb.child('stats').set(@player.stats)
 
   harvest: (room) ->
     return unless _.find(['r', 'g', 'b'], (k) =>

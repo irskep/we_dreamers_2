@@ -2822,18 +2822,23 @@
       }
       if (!this.adjacentRoom(room, dGridPoint)) {
         if (dGridPoint.x + dGridPoint.y > 1) {
-          return fbDoors.child(room.hash() + newPoint.toString()).set({
+          fbDoors.child(room.hash() + newPoint.toString()).set({
             room1: room.gridPoint,
             room2: newPoint,
             type: 'basic'
           });
         } else {
-          return fbDoors.child(newPoint.toString() + room.hash()).set({
+          fbDoors.child(newPoint.toString() + room.hash()).set({
             room1: newPoint,
             room2: room.gridPoint,
             type: 'basic'
           });
         }
+        return _.each(['r', 'g', 'b'], function(k) {
+          _this.player.stats[k] -= WD.BONK_AMOUNT / 2;
+          _this.player.stats[k] = Math.max(_this.player.stats[k], 0);
+          return _this.player.fb.child('stats').set(_this.player.stats);
+        });
       }
     };
 
