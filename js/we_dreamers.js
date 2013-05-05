@@ -2387,7 +2387,7 @@
 
   window.WD = window.WD || {};
 
-  window.fb = new Firebase('https://we-dreamers.firebaseio.com/LD26');
+  window.fb = new Firebase('https://we-dreamers.firebaseio.com/LD26_2');
 
   WD.useFirefoxGradients = false;
 
