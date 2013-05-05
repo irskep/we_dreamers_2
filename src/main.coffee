@@ -1,6 +1,6 @@
 window.WD = window.WD or {}
 
-window.fb = (new Firebase('https://we-dreamers.firebaseio.com/LD26'))
+window.fb = (new Firebase('https://we-dreamers.firebaseio.com/LD26_2'))
 
 # hax
 WD.useFirefoxGradients = false
